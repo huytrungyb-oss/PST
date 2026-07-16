@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PM Service Tool – VNPT VAS</title>
+<style>
+:root{--bg:#0f1117;--card:#161b27;--border:#1e2740;--text:#e2e8f0;--muted:#64748b;--sub:#94a3b8;--accent:#a78bfa;--purple:#7c3aed;--blue:#0369a1;--green:#065f46;--teal:#0c4a6e;--pink:#831843;--inp:#0d1117}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px}
+header{background:#0d1117;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px}
+.logo{color:var(--accent);font-weight:800;font-size:15px}
+.logo-sub{color:#374151;font-size:11px}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab{padding:10px 20px;cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;border-bottom:2px solid transparent;transition:all .15s;user-select:none}
+.tab:hover{color:var(--sub)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{display:none}.panel.active{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px}
+.card-title{color:var(--accent);font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{color:var(--sub);font-size:11px;font-weight:600}
+input,select,textarea{background:var(--inp);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;outline:none;width:100%;font-family:inherit}
+textarea{resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:#4338ca}
+.btn{border:none;border-radius:6px;padding:9px 20px;cursor:pointer;font-weight:700;font-size:12px;font-family:inherit;transition:opacity .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.bp{background:var(--purple);color:#fff}
+.bb{background:var(--blue);color:#fff}
+.bg{background:var(--green);color:#fff}
+.bt{background:var(--teal);color:#fff}
+.bk{background:var(--pink);color:#fff}
+.btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}
+/* Package table */
+.pkg-table{width:100%;border-collapse:collapse;font-size:11px}
+.pkg-table th{background:#0d1117;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;padding:6px 8px;text-align:left;border:1px solid var(--border)}
+.pkg-table td{padding:4px 6px;border:1px solid var(--border)}
+.pkg-table input,.pkg-table select{border:none;background:transparent;font-size:11px;padding:3px 4px}
+.del-btn{background:#450a0a;color:#fff;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;font-size:10px;font-weight:700}
+/* Status */
+.status{border-radius:8px;padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.status-load{background:#0a1f30;border:1px solid #1e40af;color:#93c5fd}
+.status-err{background:#2d0a0a;border:1px solid #7c2d12;color:#fca5a5}
+.status-ok{background:#0d3d1f;border:1px solid #065f46;color:#34d399}
+.spinner{width:12px;height:12px;border:2px solid #60a5fa;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none}
+.note{color:var(--muted);font-size:11px;margin-top:4px}
+.section-title{color:var(--text);font-weight:800;font-size:16px}
+.section-sub{color:var(--muted);font-size:12px;margin-top:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">⚡ PM SERVICE TOOL</div>
+    <div class="logo-sub">Bundle Add-on · VNPT VAS · Tạo file Word đúng format mẫu</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Status bar -->
+  <div id="statusBar" class="hidden status"></div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">📝 1. KBDV</div>
+    <div class="tab" onclick="switchTab(1)">📄 2. CV → VNP</div>
+    <div class="tab" onclick="switchTab(2)">🧪 3. UAT</div>
+    <div class="tab" onclick="switchTab(3)">🚀 4. CV Khai trương</div>
+    <div class="tab" onclick="switchTab(4)">📦 Tất cả 4 file</div>
+  </div>
+
+  <!-- ───── SHARED FORM (dùng chung cho tất cả tabs) ───── -->
+  <div id="panel0" class="panel active">
+    <div><div class="section-title">📝 Kịch bản Dịch vụ (KBDV)</div><div class="section-sub">Điền thông tin → tải về file Word đúng format mẫu iCallme</div></div>
+    <div id="form-area-0"></div>
+    <div class="btn-row">
+      <button class="btn bp" onclick="generate('kbdv')">✨ Tạo KBDV (.docx)</button>
+    </div>
+  </div>
+
+  <div id="panel1" class="panel">
+    <div><div class="section-title">📄 Công văn Thông báo Triển khai</div><div class="section-sub">Gửi VNP sau khi có KBDV dự thảo · Format mẫu Busuu</div></div>
+    <div id="form-area-1"></div>
+    <div class="btn-row">
+      <button class="btn bb" onclick="generate('cv-vnp')">✨ Tạo CV gửi VNP (.docx)</button>
+    </div>
+  </div>
+
+  <div id="panel2" class="panel">
+    <div><div class="section-title">🧪 Biên bản Test Nghiệm thu UAT</div><div class="section-sub">Test cases đầy đủ, MT mẫu điền sẵn · Format mẫu vnStudy</div></div>
+    <div id="form-area-2"></div>
+    <div class="card">
+      <div class="card-title">Thông tin nghiệm thu</div>
+      <div class="g2" style="margin-bottom:0">
+        <div class="field"><label>Người test (họ tên, phòng ban)</label><input id="test_person" value="Nguyễn Lan Hương"></div>
+        <div class="field"><label>Địa điểm test</label><input id="test_location" value="Số 97 đường Nguyễn Chí Thanh, Phường Láng, TP Hà Nội"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn bk" onclick="generate('uat')">✨ Tạo Biên bản UAT (.docx)</button>
+    </div>
+  </div>
+
+  <div id="panel3" class="panel">
+    <div><div class="section-title">🚀 CV Thông báo Hoàn thành Triển khai</div><div class="section-sub">Gửi VNP sau khi UAT pass · Format mẫu iCallme khai trương</div></div>
+    <div id="form-area-3"></div>
+    <div class="card">
+      <div class="card-title">Thông tin khai trương</div>
+      <div class="g2">
+        <div class="field"><label>Số CV triển khai đã gửi</label><input id="cv_trien_khai_so" placeholder="vd: 569/VNPT-Media-VAS"></div>
+        <div class="field"><label>Ngày CV triển khai</label><input id="cv_trien_khai_ngay" placeholder="vd: 22/07/2026"></div>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Mã định danh dịch vụ</label><input id="service_code_id" placeholder="vd: DCO0A3VMADVK674"></div>
+        <div class="field"><label>Ngày khai trương chính thức</label><input id="launch_date" placeholder="vd: 01/10/2026"></div>
+      </div>
+      <div class="field"><label>Số CV phúc đáp VNP (phân cách dấu chấm phẩy)</label>
+        <textarea id="vnp_feedback_cvs" rows="2" placeholder="vd: 2980/KHCN-DVSCN ngày 28/07/2026; 3727/KHCN-DVSCN ngày 15/09/2026"></textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn bt" onclick="generate('cv-khai-truong')">✨ Tạo CV Khai trương (.docx)</button>
+    </div>
+  </div>
+
+  <div id="panel4" class="panel">
+    <div><div class="section-title">📦 Tạo tất cả 4 file cùng lúc</div><div class="section-sub">Điền đầy đủ thông tin → tải về 1 file .zip chứa cả 4 tài liệu</div></div>
+    <div id="form-area-4"></div>
+    <div class="card">
+      <div class="card-title">Thông tin bổ sung (UAT)</div>
+      <div class="g2" style="margin-bottom:0">
+        <div class="field"><label>Người test</label><input id="test_person2" value="Nguyễn Lan Hương"></div>
+        <div class="field"><label>Địa điểm test</label><input id="test_location2" value="Số 97 đường Nguyễn Chí Thanh, Phường Láng, TP Hà Nội"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Thông tin khai trương (CV Khai trương)</div>
+      <div class="g2">
+        <div class="field"><label>Số CV triển khai</label><input id="cv_so2" placeholder="569/VNPT-Media-VAS"></div>
+        <div class="field"><label>Ngày CV triển khai</label><input id="cv_ngay2" placeholder="22/07/2026"></div>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Mã định danh DV</label><input id="svc_id2" placeholder="DCO0A3VMADVK674"></div>
+        <div class="field"><label>Ngày khai trương</label><input id="launch_dt2" placeholder="01/10/2026"></div>
+      </div>
+      <div class="field"><label>Số CV phúc đáp VNP</label>
+        <textarea id="feedback2" rows="2" placeholder="2980/KHCN-DVSCN ngày 28/07/2026; ..."></textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn bp" onclick="generate('all')" style="background:#7c3aed;font-size:13px;padding:11px 24px">📦 Tạo cả 4 file (.zip)</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── Tab switching ──
+let currentTab = 0;
+function switchTab(i) {
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', i===j));
+  document.querySelectorAll('.panel').forEach((p,j) => p.classList.toggle('active', i===j));
+  currentTab = i;
+}
+
+// ── Shared form HTML builder ──
+function buildFormHTML(suffix) {
+  suffix = suffix || '';
+  return `
+  <div class="card">
+    <div class="card-title">Thông tin cơ bản</div>
+    <div class="g2">
+      <div class="field"><label>Tên dịch vụ *</label><input id="svc_name${suffix}" value="Bundle Add-on " placeholder="Bundle Add-on VTVprime"></div>
+      <div class="field"><label>Tên đối tác *</label><input id="partner${suffix}" placeholder="Công ty TNHH I-com"></div>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Mô tả dịch vụ CP *</label>
+      <textarea id="desc${suffix}" rows="3" placeholder="VTVprime là nền tảng giải trí số OTT thế hệ mới..."></textarea>
+    </div>
+    <div class="g3">
+      <div class="field"><label>Website *</label><input id="website${suffix}" placeholder="http://vtvprime.vn"></div>
+      <div class="field"><label>Kênh sử dụng</label>
+        <select id="channel${suffix}">
+          <option>Application</option>
+          <option selected>Web/Wap/App</option>
+          <option>Web/Wap</option>
+        </select>
+      </div>
+      <div class="field"><label>Loại quyền lợi CP</label>
+        <select id="benefit${suffix}">
+          <option value="account" selected>Tài khoản (SĐT + mật khẩu)</option>
+          <option value="license">License (mã kích hoạt)</option>
+          <option value="activation">Kích hoạt trực tiếp</option>
+        </select>
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:0">
+      <div class="field"><label>Đầu số</label><input id="svc_code${suffix}" value="888"></div>
+      <div class="field"><label>Ngày triển khai dự kiến</label><input id="launch_exp${suffix}" placeholder="Tháng 9/2026"></div>
+      <div class="field"><label>Đầu mối liên hệ</label><input id="contact${suffix}" value="Nguyễn Mạnh Thắng"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Thông tin liên hệ</div>
+    <div class="g3" style="margin-bottom:0">
+      <div class="field"><label>Đơn giá Data (VNĐ/GB – QĐ55)</label><input id="unit_price${suffix}" value="2.796"></div>
+      <div class="field"><label>SĐT đầu mối</label><input id="phone${suffix}" value="0943.029.193"></div>
+      <div class="field"><label>Email đầu mối</label><input id="email${suffix}" value="nmanhthang@vnpt.vn"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Bảng gói cước</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn bg" onclick="addPkg('${suffix}')" style="padding:5px 12px;font-size:11px">+ Thêm gói</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="pkg-table" id="pkg_table${suffix}">
+        <thead><tr>
+          <th>Mã gói</th><th>Giá (VNĐ)</th><th>Thời hạn</th>
+          <th>Ưu đãi Data</th><th>Quyền lợi CP</th><th>Cú pháp phụ</th><th></th>
+        </tr></thead>
+        <tbody id="pkg_body${suffix}">
+          <tr>
+            <td><input class="pkc" data-f="code" placeholder="VPRI8" style="width:72px"></td>
+            <td><input class="pkc" data-f="price" placeholder="8.000đ" style="width:90px"></td>
+            <td style="white-space:nowrap">
+              <input class="pkc" data-f="duration" value="24" style="width:38px">
+              <select class="pkc" data-f="duration_type" style="width:60px"><option>giờ</option><option>ngày</option></select>
+            </td>
+            <td><input class="pkc" data-f="data" placeholder="500MB"></td>
+            <td><input class="pkc" data-f="cp_benefit" placeholder="01 tài khoản VIP"></td>
+            <td><input class="pkc" data-f="alt_codes" placeholder="VPRI8P,VPRI8K"></td>
+            <td><button class="del-btn" onclick="delPkg(this)">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">💡 Cú pháp phụ: các mã đăng ký thay thế, phân cách bằng dấu phẩy</div>
+  </div>`;
+}
+
+// ── Render shared forms ──
+for (let i = 0; i <= 4; i++) {
+  const suf = i === 0 ? '' : `_${i}`;
+  const el  = document.getElementById(`form-area-${i}`);
+  if (el) el.innerHTML = buildFormHTML(suf);
+}
+
+// ── Package management ──
+function addPkg(suffix) {
+  const tbody = document.getElementById(`pkg_body${suffix}`);
+  const row = tbody.querySelector('tr');
+  const clone = row.cloneNode(true);
+  clone.querySelectorAll('input').forEach(i => {
+    if (i.dataset.f === 'duration') i.value = '30';
+    else i.value = '';
+  });
+  clone.querySelector('select[data-f="duration_type"]').value = 'ngày';
+  tbody.appendChild(clone);
+}
+
+function delPkg(btn) {
+  const tbody = btn.closest('tbody');
+  if (tbody.querySelectorAll('tr').length > 1)
+    btn.closest('tr').remove();
+}
+
+// ── Read form data ──
+function readForm(suffix) {
+  const s = suffix || '';
+  const suf = s; // for pkg table
+
+  const getV = id => (document.getElementById(id) || {}).value || '';
+
+  const pkgRows = document.querySelectorAll(`#pkg_body${suf} tr`);
+  const packages = [];
+  pkgRows.forEach(row => {
+    const pkg = {};
+    row.querySelectorAll('[data-f]').forEach(el => {
+      pkg[el.dataset.f] = el.value || '';
+    });
+    if (pkg.code) packages.push(pkg);
+  });
+
+  return {
+    service_name:   getV(`svc_name${suf}`),
+    partner_name:   getV(`partner${suf}`),
+    service_desc:   getV(`desc${suf}`),
+    website:        getV(`website${suf}`),
+    usage_channel:  getV(`channel${suf}`),
+    benefit_type:   getV(`benefit${suf}`),
+    service_code:   getV(`svc_code${suf}`) || '888',
+    data_unit_price:getV(`unit_price${suf}`) || '2.796',
+    expected_launch:getV(`launch_exp${suf}`) || 'Tháng ___/2026',
+    contact_name:   getV(`contact${suf}`) || 'Nguyễn Mạnh Thắng',
+    contact_phone:  getV(`phone${suf}`) || '0943.029.193',
+    contact_email:  getV(`email${suf}`) || 'nmanhthang@vnpt.vn',
+    packages,
+    // UAT fields
+    test_person:    getV('test_person') || getV('test_person2') || 'Nguyễn Lan Hương',
+    test_location:  getV('test_location') || getV('test_location2') || 'Hà Nội',
+    // CV khai truong fields
+    cv_trien_khai_so:  getV('cv_trien_khai_so') || getV('cv_so2') || '___/VNPT-Media-VAS',
+    cv_trien_khai_ngay:getV('cv_trien_khai_ngay') || getV('cv_ngay2') || '___/___/2026',
+    vnp_feedback_cvs:  getV('vnp_feedback_cvs') || getV('feedback2') || '___/KHCN-DVSCN ngày ___/___/2026',
+    service_code_id:   getV('service_code_id') || getV('svc_id2') || '___________________',
+    launch_date:       getV('launch_date') || getV('launch_dt2') || '___/___/2026',
+  };
+}
+
+// ── Generate ──
+async function generate(type) {
+  // Figure out which suffix to use based on current tab
+  const tabSuffixMap = { 0:'', 1:'_1', 2:'_2', 3:'_3', 4:'_4' };
+  const suf = tabSuffixMap[currentTab] || '';
+  const data = readForm(suf);
+
+  if (!data.service_name.trim()) { showStatus('err', '⚠️ Vui lòng điền Tên dịch vụ!'); return; }
+  if (!data.partner_name.trim()) { showStatus('err', '⚠️ Vui lòng điền Tên đối tác!'); return; }
+  if (!data.website.trim())      { showStatus('err', '⚠️ Vui lòng điền Website!'); return; }
+  if (data.packages.length === 0){ showStatus('err', '⚠️ Cần ít nhất 1 gói cước!'); return; }
+
+  const labels = {
+    'kbdv': 'KBDV',
+    'cv-vnp': 'CV gửi VNP',
+    'uat': 'Biên bản UAT',
+    'cv-khai-truong': 'CV Khai trương',
+    'all': 'cả 4 tài liệu'
+  };
+  showStatus('load', `⏳ Đang tạo ${labels[type] || type}... (vài giây)`);
+
+  // Disable all buttons
+  document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+
+  try {
+    const resp = await fetch(`/api/generate/${type}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+      throw new Error(err.detail || 'Lỗi không xác định');
+    }
+
+    // Get filename from headers
+    const cd = resp.headers.get('Content-Disposition') || '';
+    const match = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    let filename = match ? match[1].replace(/['"]/g,'') : `output.${type === 'all' ? 'zip' : 'docx'}`;
+    filename = decodeURIComponent(filename.replace(/UTF-8''/, ''));
+
+    // Download
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+
+    showStatus('ok', `✅ Tải về thành công: ${filename}`);
+  } catch(e) {
+    showStatus('err', `⛔ Lỗi: ${e.message}`);
+  } finally {
+    document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+  }
+}
+
+function showStatus(type, msg) {
+  const bar = document.getElementById('statusBar');
+  bar.className = `status status-${type}`;
+  bar.classList.remove('hidden');
+  bar.innerHTML = (type === 'load' ? '<span class="spinner"></span> ' : '') + msg;
+  if (type === 'ok') setTimeout(() => bar.classList.add('hidden'), 5000);
+}
+</script>
+</body>
+</html>
