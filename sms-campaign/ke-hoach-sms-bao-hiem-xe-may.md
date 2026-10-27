@@ -26,7 +26,7 @@ CTR 18,75% là **rất cao** (benchmark SMS ~8–15%). Vậy nội dung đã gâ
 
 **Hai lỗi nằm ngay trong tin nhắn cũ:**
 
-1. **Tin dài 4 tin (4 segment)**: có dấu tiếng Việt → mã hoá UCS-2 (70 ký tự/tin); tin cũ ~218 ký tự = **4 MT/thuê bao**, tức 8.000 thuê bao tốn ~32.000 MT. Viết **không dấu ≤160 ký tự** = 1 MT → **giảm ~75% chi phí** cùng số người nhận.
+1. **Tin dài 4 tin (4 segment)**: có dấu tiếng Việt → mã hoá UCS-2 (70 ký tự/tin); tin cũ ~218 ký tự = **4 MT/thuê bao**, tức 8.000 thuê bao tốn ~32.000 MT. Viết **không dấu ≤160 ký tự** = 1 MT → **giảm ~75% chi phí**; nếu giữ có dấu cho tự nhiên (mục 6) thì rút gọn tin và đo xem đơn tăng có bù được cước.
 2. **Nhãn (TB) cho tin quảng cáo**: theo NĐ 91/2020, tin quảng cáo phải có nhãn **QC**, gửi trong khung **7h–22h**, **tối đa 1 tin quảng cáo/thuê bao/24h** (cùng một chủ thể quảng cáo), và có **cách từ chối**. Gắn sai nhãn có thể bị nhà mạng chặn/phạt. ⚠️ Xác nhận lại cú pháp từ chối với nhà mạng.
 
 **Việc cần làm trước khi gửi đợt mới** (nếu không, gửi thêm chỉ đốt tiền):
@@ -104,7 +104,7 @@ Nguyên tắc: **mỗi tin phải xứng đáng làm phiền người nhận**. 
 
 - **5 chữ đầu quyết định đọc tiếp hay không** — nêu đúng tình huống của người nhận ("Bạn đã xem…", "Tài xế công nghệ:", "BH xe máy của bạn sắp hết hạn…").
 - **1 CTA, 1 link**. Không chèn số tổng đài tính phí 1.000đ/phút vào tin bán hàng — nó tạo cảm giác "bị tính tiền" và chiếm ký tự; để số CSKH trên landing page.
-- **Không dấu, ≤160 ký tự** = 1 MT. Mọi tin ở mục 6 đã được đếm (tính link rút gọn 20 ký tự + câu từ chối).
+- **Độ dài:** có dấu = 67 ký tự/MT, không dấu = 153–160 ký tự/MT. Mục 6 ghi sẵn số ký tự và số MT của từng tin để tính cước.
 - **Link rút gọn mang thương hiệu** (vd. `tenmien.vn/bh`) thay vì link lạ → tăng lòng tin, giảm bị lọc.
 - **Nói lợi ích trước, nỗi sợ sau**: "phạt 300.000đ" là móc câu tốt nhưng người ta mua vì *dễ & rẻ & có quà*. Tin cũ đã có móc câu nhưng không có lý do mua *ngay*.
 
@@ -188,56 +188,60 @@ Ví dụ minh hoạ (thay số thật của mình): giá MT 700đ, hoa hồng 15
 
 ---
 
-## 6. Bộ tin nhắn MT (không dấu, đã đếm ký tự, tất cả = 1 MT)
+## 6. Bộ tin nhắn MT (tiếng Việt có dấu, giọng tự nhiên)
 
-Quy ước: `[LINK]` = link rút gọn ~20 ký tự; `TC gui 9xxx` = cú pháp từ chối theo đầu số thực tế (⚠️ xác nhận với nhà mạng). Số ký tự đã tính cả hai phần này.
+Quy ước: `[LINK]` = link rút gọn ~20 ký tự; `9xxx` = đầu số thật (⚠️ xác nhận cú pháp từ chối với nhà mạng). Ký tự và số MT đã tính cả link và câu từ chối.
 
-### 6.1 Retarget người đã click (S1)
+**Cách viết:** nói như nhân viên nhắn cho khách quen: câu ngắn, xưng "bạn" và "bên mình", nêu một lý do cụ thể để mua bây giờ, không chất nhiều tính từ, không dùng chữ in hoa hay dấu chấm than liên tục.
 
-| Mã | Nội dung | Ký tự |
-|---|---|---|
-| **R1** | `(QC) Ban da xem BH xe may nhung chua mua xong. Chi 66.000d/nam, tru vao TK dien thoai, 2 phut co chung nhan. Tang 3GB data: [LINK] TC gui 9xxx` | 155 |
-| **R2** | `(QC) Con 48h nhan qua: mua BH TNDS xe may 66.000d tang 3GB data. Khong can nhap so khung, so may - chi can bien so: [LINK] TC gui 9xxx` | 147 |
-| **R3** | `(QC) Lan nhac cuoi: qua 3GB data cho BH xe may 66.000d het han 23h59 hom nay. Mua 2 phut: [LINK] TC gui 9xxx` | 121 |
-| **K1** | `(QC) Mua BH xe may 66.000d khong can vao web: soan BH [bien so] gui 9xxx, tien tru vao TK. Tang 3GB data. TC gui 9xxx` | 117 |
+**Lưu ý chi phí:** tin có dấu được tính 67 ký tự/MT (khi ghép tin), nên mỗi tin dưới đây tốn 3–5 MT thay vì 1. Nên A/B test bản có dấu với bản không dấu ngắn để xem phần tăng đơn có bù được phần tăng cước không.
 
-### 6.2 Tệp mới — chương trình nền KM1 / KM2
+### 6.1 Nhắc lại người đã bấm link hôm qua (S1)
 
-| Mã | Tệp | Nội dung | Ký tự |
+| Mã | Nội dung | Ký tự | Số MT |
 |---|---|---|---|
-| **A1** | S7 rộng | `(QC) Bao hiem xe may 66.000d/nam, tru TK dien thoai, tang 3GB data. Chung nhan dien tu sau 1 phut, khoi lo bi phat 300.000d: [LINK] TC gui 9xxx` | 156 |
-| **A2** | S4 | `(QC) Anh/chi chay xe moi ngay? Chi 66.000d co BH TNDS xe may ca nam + tang 3GB data. Mua tren dien thoai 2 phut: [LINK] TC gui 9xxx` | 144 |
-| **A3** | S5 | `(QC) Mua BH xe may 3 nam chi 198.000d, khoi lo gia han, tang the cao 50.000d. Tru vao TK dien thoai: [LINK] TC gui 9xxx` | 132 |
-| **D1** | S3 | `(QC) Tai xe cong nghe: BH TNDS xe may la giay to bat buoc khi CSGT kiem tra. 66.000d/nam, tang 3GB data chay app ca tuan: [LINK] TC gui 9xxx` | 153 |
+| **R1** | (QC) Hôm qua bạn có bấm xem bảo hiểm xe máy nhưng chưa mua xong. Nếu lúc đó bị vướng thì giờ đơn giản hơn rồi: chỉ cần nhập biển số, tiền trừ thẳng vào tài khoản điện thoại, 66.000đ dùng cả năm. Mua xong được tặng thêm 3GB data. Link đây: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 302 | 5 |
+| **R2** | (QC) Nhắc bạn một chút: quà 3GB data khi mua bảo hiểm xe máy chỉ còn đến hết thứ Hai. Mua mất khoảng 2 phút, không cần số khung số máy, có biển số là được: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 219 | 4 |
+| **R3** | (QC) Đây là tin cuối bên mình nhắc về chuyện này: 23h59 tối nay hết quà 3GB data khi mua bảo hiểm xe máy 66.000đ. Bạn cần thì bấm vào đây nhé: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 206 | 4 |
+| **K1** | (QC) Không tiện vào web thì bạn mua bảo hiểm xe máy bằng tin nhắn cũng được. Soạn BH dấu cách biển số gửi 9xxx, ví dụ BH 29X112345. Phí 66.000đ trừ vào tài khoản, giấy chứng nhận gửi về máy, kèm 3GB data. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 247 | 4 |
+
+### 6.2 Khách mới — chương trình nền KM1 / KM2
+
+| Mã | Tệp | Nội dung | Ký tự | Số MT |
+|---|---|---|---|---|
+| **A1** | S7 | (QC) Đi xe máy mà không có bảo hiểm bắt buộc thì bị phạt 200.000–300.000đ, trong khi mua cả năm chỉ 66.000đ. Bạn mua ngay trên điện thoại, tầm 2 phút, tiền trừ vào tài khoản, giấy chứng nhận lưu luôn trong máy. Tháng này mua được tặng 3GB data: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 308 | 5 |
+| **A2** | S4 | (QC) Ngày nào cũng chạy xe đi học, đi làm thì nhớ mang theo bảo hiểm xe máy nhé. 66.000đ dùng cả năm, mua trên điện thoại, tiền trừ vào tài khoản. Mua trong tuần này được tặng thêm 3GB data: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 254 | 4 |
+| **A3** | S5 | (QC) Mua bảo hiểm xe máy một lần cho 3 năm, 198.000đ, khỏi phải nhớ gia hạn mỗi năm. Gói 3 năm được tặng thẻ nạp 50.000đ, tiền trừ thẳng vào tài khoản điện thoại: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 226 | 4 |
+| **D1** | S3 | (QC) Anh chị chạy xe công nghệ hay giao hàng thì bị CSGT dừng xe là phải xuất trình bảo hiểm xe máy. Mua trên điện thoại 66.000đ/năm, giấy chứng nhận điện tử mở ra là có. Tặng thêm 3GB data để chạy app: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 266 | 4 |
 
 ### 6.3 Các chương trình KM3–KM7
 
-| Mã | CT | Nội dung | Ký tự |
-|---|---|---|---|
-| **F2** | KM3 | `(QC) 12h-13h hom nay: 200 khach dau tien mua BH xe may 66.000d duoc tang the cao 20.000d. Mua ngay: [LINK] TC gui 9xxx` | 131 |
-| **F1** | KM4 | `(QC) Moi ban be mua BH xe may qua link cua ban: ca 2 nguoi deu nhan 2GB data. Link cua ban: [LINK] TC gui 9xxx` | 123 |
-| **G1** | KM5 | `(QC) BH xe may cua ban sap het han ngay [DD/MM]. Gia han som 66.000d, nhan ngay 3GB data. Tru vao TK dien thoai: [LINK] TC gui 9xxx` | 144 |
-| **D2** | KM6 | `(QC) Combo BH xe may + tai nan nguoi ngoi tren xe chi 96.000d/nam, tang goi data 30 ngay. Mua 2 phut: [LINK] TC gui 9xxx` | 133 |
-| **T2** | KM7 mở màn | `(QC) Tet nay CSGT tang cuong kiem tra. BH xe may cua ban con han khong? 66.000d/nam, tang 3GB data: [LINK] TC gui 9xxx` | 131 |
-| **T1** | KM7 quay số | `(QC) Ve que an Tet bang xe may? Mua BH TNDS 66.000d/nam, nhan ma du thuong trung the 500.000d. Mua ngay: [LINK] TC gui 9xxx` | 136 |
+| Mã | CT | Nội dung | Ký tự | Số MT |
+|---|---|---|---|---|
+| **F2** | KM3 | (QC) Trưa nay từ 12h đến 13h, 200 người mua bảo hiểm xe máy đầu tiên được nạp 20.000đ vào tài khoản. Bảo hiểm 66.000đ/năm, mua 2 phút là xong: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 206 | 4 |
+| **F1** | KM4 | (QC) Cảm ơn bạn đã mua bảo hiểm xe máy. Bạn gửi link này cho bạn bè, người nhà, ai mua qua link thì cả hai người đều được 2GB data: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 195 | 3 |
+| **G1** | KM5 | (QC) Bảo hiểm xe máy của xe [BIỂN SỐ] hết hạn ngày [DD/MM]. Bạn gia hạn từ bây giờ để không bị hở ngày nào, giá vẫn 66.000đ, được tặng thêm 3GB data: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 213 | 4 |
+| **D2** | KM6 | (QC) Bảo hiểm bắt buộc chủ yếu đền cho người khác khi bạn gây tai nạn. Còn bạn và người ngồi sau thì cần thêm bảo hiểm tai nạn. Gói cả hai 96.000đ/năm, tặng data dùng 30 ngày: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 239 | 4 |
+| **T2** | KM7 mở màn | (QC) Gần Tết CSGT kiểm tra giấy tờ nhiều hơn. Bạn xem lại bảo hiểm xe máy còn hạn không nhé. Hết rồi thì mua lại 66.000đ trên điện thoại, có giấy điện tử ngay, tặng 3GB data: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 238 | 4 |
+| **T1** | KM7 quay số | (QC) Tết này chạy xe về quê thì mua bảo hiểm xe máy trước khi đi nhé. Mỗi đơn 66.000đ được một mã dự thưởng, tuần nào cũng quay 10 thẻ nạp 500.000đ: [LINK]. Không muốn nhận tin nữa, soạn TC gửi 9xxx. | 212 | 4 |
 
 > Giá combo 96.000đ ở D2 là ví dụ — thay bằng biểu phí thật của BH tai nạn người ngồi trên xe.
 
-### 6.4 Tin giao dịch sau mua (không phải QC, không cần nhãn/từ chối)
+### 6.4 Tin giao dịch sau khi mua (không phải QC, không cần nhãn/từ chối)
 
-| Mã | Thời điểm | Nội dung | Ký tự |
-|---|---|---|---|
-| **C1** | Ngay khi thanh toán xong | `Cam on ban da mua BH TNDS xe may [BIEN SO], hieu luc [tu]-[den]. Chung nhan dien tu: [LINK]. Qua 3GB data da duoc cong. CSKH 19001557` | ~146 |
-| **C2** | 1 giờ sau | `Giu chung nhan BH xe may tren dien thoai: chup man hinh hoac luu link [LINK]. Khi CSGT kiem tra chi can xuat trinh tren dien thoai.` | 144 |
+| Mã | Thời điểm | Nội dung | Ký tự | Số MT |
+|---|---|---|---|---|
+| **C1** | Ngay khi thanh toán xong | Bạn đã mua xong bảo hiểm xe máy cho xe [BIỂN SỐ], hiệu lực từ [ngày] đến [ngày]. Giấy chứng nhận điện tử ở đây: [LINK]. 3GB data đã được cộng vào tài khoản. Cần hỗ trợ thì gọi 19001557. | 198 | 3 |
+| **C2** | 1 giờ sau | Mẹo nhỏ: bạn chụp màn hình giấy chứng nhận hoặc lưu link [LINK] lại. Khi CSGT kiểm tra chỉ cần mở trên điện thoại, không cần bản giấy. | 147 | 3 |
 
-### 6.5 Tin trả lời cú pháp (MO → MT)
+### 6.5 Tin trả lời khi khách soạn cú pháp (MO → MT)
 
 | Khách soạn | Hệ thống trả lời |
 |---|---|
-| `BH <biển số>` | `Xac nhan mua BH TNDS xe may [BIEN SO] 1 nam, 66.000d tru vao TK. Soan Y gui 9xxx de dong y trong 10 phut. Huy: bo qua tin nay.` |
-| `Y` | Tin C1 |
-| Sai cú pháp | `Cu phap chua dung. Soan BH [bien so], vi du: BH 29X112345 gui 9xxx. CSKH 19001557` |
-| `TC` | `Ban da tu choi nhan tin QC tu [Brandname]. Cam on ban.` (và loại khỏi mọi tệp ngay) |
+| **`BH <biển số>`** | Bạn đang mua bảo hiểm xe máy 1 năm cho xe [BIỂN SỐ], phí 66.000đ trừ vào tài khoản. Đồng ý thì soạn Y gửi 9xxx trong vòng 10 phút. Không mua thì bạn cứ bỏ qua tin này. |
+| **`Y`** | Tin C1 |
+| **Sai cú pháp** | Tin nhắn chưa đúng cú pháp. Bạn soạn BH dấu cách biển số, ví dụ BH 29X112345, rồi gửi 9xxx. Cần hỗ trợ thì gọi 19001557. |
+| **`TC`** | Bạn đã từ chối nhận tin quảng cáo từ [Brandname]. Từ giờ bên mình sẽ không gửi nữa. (Đồng thời loại số này khỏi mọi tệp ngay.) |
 
 > Bước xác nhận `Y` là bắt buộc để tránh trừ tiền nhầm và khiếu nại.
 
@@ -262,6 +266,6 @@ So sánh nhóm nhận tin với **nhóm đối chứng 10%** để biết bao nh
 - [ ] Mua thử 3 lần, sửa landing (≤2 giây, chỉ biển số, carrier billing)
 - [ ] Mở cú pháp `BH <biển số>` + bước xác nhận `Y`
 - [ ] Pháp chế + DN bảo hiểm xác nhận cấu trúc KM (mục 5.0); thông báo/đăng ký CTKM với Sở Công Thương
-- [ ] Đổi nhãn tin thành (QC), thêm cú pháp từ chối, viết không dấu ≤160 ký tự
+- [ ] Đổi nhãn tin thành (QC), thêm cú pháp từ chối, viết giọng tự nhiên, kiểm số MT mỗi tin
 - [ ] Setup tracking phễu + nhóm đối chứng 10%
 - [ ] Gửi R1 vs K1 cho S1 vào **20h00 thứ Bảy 31/10**
