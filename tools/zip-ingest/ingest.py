@@ -177,6 +177,8 @@ class Ingestor:
                     rec = json.loads(line)
                 except json.JSONDecodeError:
                     continue
+                if rec.get("status") in ("no_space", "would_convert", "skip_dry"):
+                    continue  # chưa xử lý thật -> lần sau thử lại
                 self.done.add(rec["path"])
                 self.written += rec.get("out_bytes", 0)
 
@@ -236,6 +238,13 @@ class Ingestor:
                 self.log(rec)
                 continue
 
+            if kind in ("doc", "pst", "zip"):
+                tmp_root = self.a.temp_dir or tempfile.gettempdir()
+                if shutil.disk_usage(tmp_root).free < info.file_size + 300 * 1024 * 1024:
+                    rec["status"] = "no_space"
+                    self.bump("no_space", info.file_size)
+                    self.log(rec)
+                    continue
             try:
                 rec["out_bytes"] = self.convert(zf, info, name, kind)
                 rec["status"] = "archive_done" if kind == "zip" else ("ok" if rec["out_bytes"] else "empty")
@@ -346,7 +355,91 @@ class Ingestor:
         (self.out / "INDEX.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _drives():
+    if os.name != "nt":
+        return [Path.home()]
+    return [Path(f"{c}:\\") for c in "CDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{c}:\\")]
+
+
+def _free(p: Path) -> int:
+    try:
+        return shutil.disk_usage(p).free
+    except OSError:
+        return 0
+
+
+def easy_mode_args() -> list[str] | None:
+    """Bấm đúp, không tham số: hỏi file zip bằng cửa sổ, tự chọn mọi thứ còn lại."""
+    zip_path = ""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog, messagebox
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        messagebox.showinfo("Nạp dữ liệu vào Second Brain",
+                            "Bước duy nhất: chọn file ZIP cần nạp.\n\n"
+                            "(Nếu file ở máy khác trong mạng, vào mục Network để tìm.)")
+        zip_path = filedialog.askopenfilename(title="Chọn file ZIP",
+                                              filetypes=[("File ZIP", "*.zip"), ("Tất cả", "*.*")])
+        root.destroy()
+    except Exception:
+        zip_path = input("Kéo thả file ZIP vào đây rồi bấm Enter: ").strip().strip('"')
+    if not zip_path:
+        print("Không chọn file nào. Thoát.")
+        return None
+
+    # Ưu tiên lưu thẳng vào Google Drive (tự đồng bộ lên mạng), nếu máy có cài Drive.
+    out = None
+    for d in _drives():
+        for name in ("My Drive", "Drive của tôi"):
+            if (d / name).is_dir():
+                out = d / name / "SecondBrain"
+                break
+        if out:
+            break
+    if out is None:
+        desktop = Path.home() / "Desktop"
+        out = (desktop if desktop.is_dir() else Path.home()) / "SecondBrain"
+
+    # File tạm đặt ở ổ đĩa còn trống nhiều nhất.
+    best = max(_drives(), key=_free)
+    tmp = best / "_zip_ingest_tmp" if os.name == "nt" else Path(tempfile.gettempdir())
+    tmp.mkdir(parents=True, exist_ok=True)
+    print(f"File zip : {zip_path}\nLưu vào  : {out}\nFile tạm : {tmp} (trống {human(_free(tmp))})\n")
+    return [zip_path, str(out), "--temp-dir", str(tmp), "--easy"]
+
+
+def finish_popup(out: Path, stats_text: str):
+    in_drive = any(part in ("My Drive", "Drive của tôi") for part in out.parts)
+    msg = (f"XONG!\n\n{stats_text}\n\nKết quả nằm ở:\n{out}\n\n" +
+           ("Thư mục này đang trong Google Drive, sẽ tự đồng bộ. Bạn chỉ cần quay lại báo Claude là xong."
+            if in_drive else
+            "Bước cuối: kéo thả thư mục SecondBrain này vào trang drive.google.com "
+            "(trang sẽ tự mở), rồi quay lại báo Claude."))
+    try:
+        if os.name == "nt":
+            os.startfile(str(out))
+        if not in_drive:
+            import webbrowser
+            webbrowser.open("https://drive.google.com/drive/my-drive")
+        import tkinter as tk
+        from tkinter import messagebox
+        r = tk.Tk()
+        r.withdraw()
+        r.attributes("-topmost", True)
+        messagebox.showinfo("Nạp dữ liệu vào Second Brain", msg)
+        r.destroy()
+    except Exception:
+        print(msg)
+
+
 def main():
+    argv = sys.argv[1:]
+    if not argv:
+        argv = easy_mode_args()
+        if argv is None:
+            return
     p = argparse.ArgumentParser(description="Nạp file zip lớn vào second brain, không cần giải nén toàn bộ.")
     p.add_argument("zip", help="đường dẫn file zip (có thể là \\\\MAY\\share\\file.zip)")
     p.add_argument("output", help="thư mục đầu ra (vd: thư mục Google Drive hoặc repo git)")
@@ -363,7 +456,8 @@ def main():
                    help="sửa tên file lỗi font, vd: cp1258 hoặc cp1252")
     p.add_argument("--temp-dir", default=None, help="thư mục tạm (chọn ổ còn trống nhiều nhất)")
     p.add_argument("--index-depth", type=int, default=2, help="độ sâu thư mục trong INDEX.md")
-    a = p.parse_args()
+    p.add_argument("--easy", action="store_true", help=argparse.SUPPRESS)
+    a = p.parse_args(argv)
 
     Path(a.output).mkdir(parents=True, exist_ok=True)
     ing = Ingestor(a)
@@ -386,6 +480,13 @@ def main():
         else:
             ing.write_index()
             print(f"Đã ghi {Path(a.output) / 'INDEX.md'}")
+            if a.easy:
+                ok = ing.stats.get("ok", [0, 0])[0]
+                nospace = ing.stats.get("no_space", [0, 0])[0]
+                txt = f"Đã chuyển {ok} file thành text ({human(ing.written)})."
+                if nospace:
+                    txt += f"\n{nospace} file quá lớn so với chỗ trống, chưa xử lý được."
+                finish_popup(Path(a.output).resolve(), txt)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,16 @@
 
 Dùng khi bạn có một file zip rất lớn (ví dụ 134GB) mà **cả hai máy đều không đủ chỗ** để giải nén, thậm chí không đủ chỗ để copy.
 
+## Cách dễ nhất (không cần biết kỹ thuật, Windows)
+
+1. Chép 2 file `BAM-DUP-VAO-DAY.bat` và `ingest.py` vào **cùng một thư mục** trên máy đang chứa file zip.
+2. Bấm đúp `BAM-DUP-VAO-DAY.bat`. Script tự cài Python và công cụ đọc file nếu máy chưa có.
+3. Một cửa sổ hiện ra: chọn file ZIP. Thế là xong, còn lại script tự làm:
+   - Nếu máy có Google Drive cho máy tính, kết quả lưu thẳng vào `My Drive/SecondBrain` và tự đồng bộ.
+   - Nếu không, kết quả nằm ở `Desktop/SecondBrain`, và trang drive.google.com tự mở để bạn kéo thư mục vào.
+   - File tạm được đặt ở ổ đĩa còn trống nhiều nhất. File nào quá lớn so với chỗ trống thì để lại, không làm hỏng cả quá trình.
+4. Nếu bị tắt giữa chừng, bấm đúp lại là script làm tiếp.
+
 ## Cách hoạt động
 
 ```
