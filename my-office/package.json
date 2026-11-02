@@ -1,0 +1,13 @@
+{
+  "name": "my-office",
+  "version": "0.1.0",
+  "description": "Văn phòng isometric theo dõi các phiên Claude Code theo thời gian thực",
+  "private": true,
+  "license": "MIT",
+  "bin": { "my-office": "server.js" },
+  "scripts": {
+    "start": "node server.js",
+    "build:artifact": "node scripts/build-artifact.js"
+  },
+  "engines": { "node": ">=18" }
+}
