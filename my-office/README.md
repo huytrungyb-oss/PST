@@ -14,6 +14,10 @@ Không cần cài thư viện nào, chỉ cần **Node 18+**.
 
 ## Chạy
 
+**Windows:** bấm đúp `start-windows.bat`. Trình duyệt tự mở http://127.0.0.1:4317. Giữ cửa sổ đen đó mở trong lúc dùng.
+
+**Mac / Linux:**
+
 ```bash
 cd my-office
 node server.js
@@ -55,6 +59,8 @@ Thêm hook `PermissionRequest` vào `~/.claude/settings.json` (sửa lại đư�
   }
 }
 ```
+
+Trên Windows, viết đường dẫn bằng dấu `/`, ví dụ `node C:/Users/ten/Downloads/PST/my-office/hooks/office-approve.js`.
 
 Cách hoạt động: khi Claude xin quyền, hook gửi yêu cầu lên server rồi chờ tối đa 2 phút (`OFFICE_WAIT_MS`). Bạn bấm **Duyệt** hay **Từ chối** trên web, hook trả kết quả về Claude Code. Nếu server không chạy hoặc hết thời gian chờ, hook thoát im lặng và terminal hỏi bạn như bình thường, nên không bao giờ bị kẹt.
 
