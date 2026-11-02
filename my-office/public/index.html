@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--BUNDLE:START-->
+<title>My Office</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5l8-3 8 3v16h-6v-5h-4v5z" fill="currentColor"/><rect x="7" y="7" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/><rect x="11" y="7" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/><rect x="15" y="7" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/><rect x="7" y="11" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/><rect x="15" y="11" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/></svg>
+      <span class="brand-name">My Office</span>
+      <span class="clock mono" id="clock">--:--</span>
+      <span class="mode-badge" id="modeBadge">DEMO · dữ liệu giả lập</span>
+    </div>
+    <div class="top-actions">
+      <div class="machine" id="machine" title="Bộ nhớ máy đang chạy">
+        <span class="dot dot-warn"></span>
+        <span class="machine-name" id="machineName">Máy</span>
+        <span class="mono muted" id="machineMem">RAM –</span>
+        <span class="meter"><span id="machineBar"></span></span>
+      </div>
+      <button class="btn" id="btnTimeline" type="button"><svg viewBox="0 0 24 24"><path d="M11 6 5 12l6 6M19 6l-6 6 6 6"/></svg><span>Xem lại</span></button>
+      <button class="btn" id="btnSettings" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span>Cài đặt</span></button>
+      <button class="btn btn-icon" id="btnNight" type="button" title="Đổi ngày / đêm trong văn phòng" aria-label="Đổi ngày hoặc đêm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg></button>
+    </div>
+  </header>
+
+  <aside class="panel left" id="leftPanel">
+    <div class="panel-head">
+      <h2>Phiên làm việc</h2>
+      <span class="live"><span class="dot dot-good pulse"></span><span id="liveText">đang nhận dữ liệu</span></span>
+    </div>
+    <p class="sub" id="sessionSub">–</p>
+    <div class="counts">
+      <div class="count"><b class="mono" id="cWorking">0</b><span><i class="dot dot-good"></i>đang làm</span></div>
+      <div class="count"><b class="mono" id="cWaiting">0</b><span><i class="dot dot-warn"></i>chờ duyệt</span></div>
+      <div class="count"><b class="mono" id="cIdle">0</b><span><i class="dot dot-idle"></i>đang nghỉ</span></div>
+    </div>
+    <label class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>
+      <input id="search" type="search" placeholder="Tìm theo tên hoặc thư mục…" autocomplete="off">
+    </label>
+    <div class="session-list" id="sessionList"></div>
+  </aside>
+
+  <main class="stage" id="stage">
+    <canvas id="office" aria-label="Văn phòng isometric, mỗi nhân viên là một phiên Claude Code"></canvas>
+    <div class="toast" id="toast" hidden></div>
+    <div class="avatar-hint" id="avatarHint" hidden>Đang hoá thân: chạm vào sàn để đi, hoặc dùng phím W A S D</div>
+    <nav class="toolbar" aria-label="Điều khiển camera">
+      <button class="tool active" data-view="all" type="button"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9H3z"/></svg><span>Toàn cảnh</span></button>
+      <button class="tool" data-view="desks" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="11" rx="1"/><path d="M8 20h8M12 16v4"/></svg><span>Bàn làm việc</span></button>
+      <button class="tool" data-view="meeting" type="button"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 2 6 5.5"/></svg><span>Phòng họp</span></button>
+      <button class="tool" data-view="servers" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="7" rx="1"/><rect x="4" y="14" width="16" height="7" rx="1"/><path d="M8 6.5h.01M8 17.5h.01"/></svg><span>Máy chủ</span></button>
+      <span class="sep"></span>
+      <button class="tool icon" id="zoomOut" type="button" aria-label="Thu nhỏ"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+      <span class="zoom mono" id="zoomLabel">100%</span>
+      <button class="tool icon" id="zoomIn" type="button" aria-label="Phóng to"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></button>
+      <span class="sep"></span>
+      <button class="tool icon" id="btnFull" type="button" aria-label="Toàn màn hình"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
+      <button class="tool icon" id="btnShot" type="button" aria-label="Chụp ảnh văn phòng"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+      <button class="tool icon" id="btnLabels" type="button" aria-label="Bật tắt nhãn tên"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+      <span class="sep"></span>
+      <button class="tool accent" id="btnAvatar" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v6l-3 7M12 14l3 7M7 11l5-2 5 2"/></svg><span>Hoá thân</span></button>
+    </nav>
+  </main>
+
+  <aside class="panel right" id="rightPanel">
+    <div class="panel-head">
+      <h2>Hoạt động</h2>
+      <span class="live"><span class="dot dot-good pulse"></span>trực tiếp</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="mono" id="sTasks">0</b><span>Việc</span></div>
+      <div class="stat"><b class="mono" id="sRead">0</b><span>Đọc</span></div>
+      <div class="stat"><b class="mono" id="sEdit">0</b><span>Sửa</span></div>
+      <div class="stat"><b class="mono" id="sBash">0</b><span>Lệnh</span></div>
+      <div class="stat wide"><b class="mono" id="sCost">$0</b><span>Giá API ≈</span></div>
+    </div>
+    <button class="link-card" id="linkTimeline" type="button">
+      <svg viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h7"/></svg>
+      <span><b>Dòng thời gian</b><small>Mỗi phiên làm gì, chờ bạn bao lâu</small></span>
+    </button>
+    <button class="link-card" id="linkSummary" type="button">
+      <svg viewBox="0 0 24 24"><path d="M7 4h10v4a5 5 0 0 1-10 0zM12 13v4M8 20h8M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+      <span><b>Tổng kết</b><small>Ai làm nhiều nhất, tốn bao nhiêu</small></span>
+    </button>
+    <div class="filters" id="filters" role="tablist">
+      <button class="chip active" data-filter="all" type="button">Tất cả</button>
+      <button class="chip" data-filter="attention" type="button">Cần chú ý <em id="attnCount">0</em></button>
+      <button class="chip" data-filter="bash" type="button">Lệnh</button>
+      <button class="chip" data-filter="edit" type="button">Sửa file</button>
+      <button class="chip" data-filter="read" type="button">Đọc</button>
+      <button class="chip" data-filter="web" type="button">Web</button>
+      <button class="chip" data-filter="agent" type="button">Trợ lý</button>
+    </div>
+    <div class="feed" id="feed"></div>
+  </aside>
+</div>
+
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h3 id="modalTitle">–</h3>
+      <button class="btn btn-icon" id="modalClose" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="demo.js"></script>
+<script src="office.js"></script>
+<script src="app.js"></script>
+<!--BUNDLE:END-->
+</body>
+</html>

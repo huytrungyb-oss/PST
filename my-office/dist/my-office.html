@@ -1,0 +1,1663 @@
+<title>My Office</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: ba cột như phòng điều hành — danh sách phiên | văn phòng isometric | dòng hoạt động.
+   Màn hẹp: văn phòng lên đầu, hai bảng xếp xuống dưới. */
+:root {
+  --bg: #0e131b;
+  --panel: #141a24;
+  --panel-2: #1a2230;
+  --line: #252f3f;
+  --fg: #e7eaf0;
+  --muted: #8b95a7;
+  --accent: #e9a640;       /* đèn bàn vàng ấm */
+  --accent-ink: #1b1305;
+  --good: #3fbf7f;
+  --warn: #e9a640;
+  --crit: #e5574e;
+  --info: #5fa0f2;
+  --helper: #b48cf2;
+  --warn-bg: rgba(233, 166, 64, .09);
+  --good-bg: rgba(63, 191, 127, .08);
+  --shadow: 0 10px 40px rgba(0, 0, 0, .45);
+  --font-ui: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef0f2; --panel: #ffffff; --panel-2: #f5f6f8; --line: #dfe3e8; --fg: #18202c; --muted: #637083;
+    --accent: #c9821a; --accent-ink: #fff8ec; --good: #1f9d5f; --warn: #c9821a; --crit: #cf3d34; --info: #2f78d6; --helper: #7d55cf;
+    --warn-bg: rgba(201, 130, 26, .08); --good-bg: rgba(31, 157, 95, .07); --shadow: 0 10px 40px rgba(20, 30, 50, .18);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eef0f2; --panel: #ffffff; --panel-2: #f5f6f8; --line: #dfe3e8; --fg: #18202c; --muted: #637083;
+  --accent: #c9821a; --accent-ink: #fff8ec; --good: #1f9d5f; --warn: #c9821a; --crit: #cf3d34; --info: #2f78d6; --helper: #7d55cf;
+  --warn-bg: rgba(201, 130, 26, .08); --good-bg: rgba(31, 157, 95, .07); --shadow: 0 10px 40px rgba(20, 30, 50, .18);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.45 var(--font-ui); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr) 320px;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "top top top" "left stage right";
+}
+
+/* ---------- top bar */
+.topbar {
+  grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-mark { width: 22px; height: 22px; color: var(--accent); stroke: none; }
+.brand-name { font-weight: 800; font-size: 15px; letter-spacing: -.01em; }
+.clock { font-size: 11px; color: var(--muted); padding: 2px 7px; border: 1px solid var(--line); border-radius: 6px; }
+.mode-badge { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; color: var(--info); border: 1px solid color-mix(in srgb, var(--info) 45%, transparent); background: color-mix(in srgb, var(--info) 10%, transparent); white-space: nowrap; }
+.mode-badge.live { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); background: var(--good-bg); }
+.top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.machine { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); font-size: 12px; }
+.machine-name { font-weight: 600; }
+.meter { width: 72px; height: 5px; border-radius: 9px; background: var(--line); overflow: hidden; }
+.meter span { display: block; height: 100%; width: 0; background: var(--warn); border-radius: 9px; transition: width .6s; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; font-size: 12.5px; font-weight: 500; }
+.btn:hover { border-color: var(--muted); }
+.btn-icon { padding: 6px; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.btn-primary:hover { filter: brightness(1.08); border-color: var(--accent); }
+.btn-danger { color: var(--crit); }
+
+/* ---------- side panels */
+.panel { background: var(--panel); display: flex; flex-direction: column; gap: 10px; padding: 14px 12px; min-height: 0; overflow: hidden; }
+.panel.left { grid-area: left; border-right: 1px solid var(--line); padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+.panel.right { grid-area: right; border-left: 1px solid var(--line); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panel-head h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.live { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.sub { margin: -6px 0 0; font-size: 11.5px; color: var(--muted); }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.dot-good { background: var(--good); }
+.dot-warn { background: var(--warn); }
+.dot-crit { background: var(--crit); }
+.dot-idle { background: var(--muted); }
+.dot-helper { background: var(--helper); }
+.pulse { animation: pulse 1.8s infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 60%, transparent); } 50% { box-shadow: 0 0 0 5px transparent; } }
+
+.counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.count { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: var(--panel-2); display: flex; flex-direction: column; }
+.count b { font-size: 17px; line-height: 1.1; }
+.count span { font-size: 10.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+.count i { width: 6px; height: 6px; }
+
+.search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; background: var(--panel-2); color: var(--muted); }
+.search input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); padding: 8px 0; font: inherit; font-size: 12.5px; outline: none; }
+
+.session-list { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin: 0 -4px; padding: 0 4px 10px; flex: 1; }
+.group-label { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 8px 2px 0; display: flex; gap: 6px; align-items: center; }
+.group-label.warn { color: var(--warn); }
+.group-label em { font-style: normal; font-family: var(--font-mono); background: var(--line); color: var(--fg); border-radius: 5px; padding: 0 5px; font-size: 10px; }
+
+.session { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 9px 10px; border-radius: var(--r); border: 1px solid transparent; cursor: pointer; text-align: left; background: transparent; width: 100%; }
+.session:hover { background: var(--panel-2); }
+.session.selected { border-color: var(--accent); background: var(--panel-2); }
+.session.waiting { border-color: color-mix(in srgb, var(--warn) 55%, transparent); background: var(--warn-bg); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; position: relative; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+.avatar .st { position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--panel); }
+.s-main { min-width: 0; }
+.s-name, .s-act { display: block; }
+.s-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-act { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.session.waiting .s-act { color: var(--warn); }
+.s-meta { text-align: right; font-size: 10.5px; color: var(--muted); font-family: var(--font-mono); line-height: 1.5; }
+.s-meta b { color: var(--good); font-weight: 600; }
+.session.waiting .s-meta b { color: var(--warn); }
+.s-bar { grid-column: 2 / 4; height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.s-bar span { display: block; height: 100%; border-radius: 3px; background: var(--info); }
+.session.waiting .s-bar span { background: var(--crit); }
+.helper-row { display: block; grid-column: 2 / 4; font-size: 11px; color: var(--muted); border-left: 2px solid var(--helper); padding-left: 8px; margin-top: 2px; }
+.helper-row b { color: var(--fg); font-weight: 600; }
+.empty { color: var(--muted); font-size: 12px; padding: 14px 4px; line-height: 1.6; }
+
+/* ---------- stage */
+.stage { grid-area: stage; position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #6f7a84; }
+#office { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#office.dragging { cursor: grabbing; }
+.toolbar {
+  position: absolute; left: 50%; bottom: max(14px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 12px; max-width: calc(100% - 24px); overflow-x: auto;
+  background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(8px);
+  scrollbar-width: none;
+}
+.tool { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.tool:hover { background: var(--panel-2); }
+.tool.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.tool.icon { padding: 7px; }
+.tool.accent.active { background: var(--accent); color: var(--accent-ink); }
+.zoom { font-size: 11px; min-width: 40px; text-align: center; color: var(--muted); }
+.sep { width: 1px; height: 20px; background: var(--line); margin: 0 3px; flex: none; }
+.toast { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line); padding: 8px 14px; border-radius: 9px; box-shadow: var(--shadow); font-size: 12.5px; font-weight: 600; max-width: calc(100% - 32px); }
+.avatar-hint { position: absolute; left: 50%; bottom: 76px; transform: translateX(-50%); font-size: 12px; background: var(--accent); color: var(--accent-ink); font-weight: 600; padding: 6px 12px; border-radius: 99px; white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- right panel */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr) 1.3fr; gap: 5px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 6px 7px; background: var(--panel-2); display: flex; flex-direction: column; min-width: 0; }
+.stat b { font-size: 15px; line-height: 1.2; }
+.stat span { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.link-card { display: flex; gap: 10px; align-items: center; text-align: left; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; background: transparent; cursor: pointer; width: 100%; }
+.link-card:hover { background: var(--panel-2); }
+.link-card svg { color: var(--accent); width: 18px; height: 18px; }
+.link-card b { display: block; font-size: 12.5px; }
+.link-card small { color: var(--muted); font-size: 11px; }
+.filters { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; flex: none; }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 99px; padding: 4px 10px; cursor: pointer; font-size: 11.5px; white-space: nowrap; display: inline-flex; gap: 5px; align-items: center; }
+.chip.active { border-color: var(--accent); color: var(--accent); }
+.chip em { font-style: normal; background: var(--crit); color: #fff; border-radius: 99px; font-size: 10px; padding: 0 5px; font-weight: 700; }
+.chip em.zero { display: none; }
+.feed { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; flex: 1; margin: 0 -4px; padding: 0 4px 10px; }
+.ev { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; background: var(--panel-2); display: grid; gap: 3px; animation: slide .35s ease-out; }
+@keyframes slide { from { transform: translateY(-4px); opacity: .4; } to { transform: none; opacity: 1; } }
+.ev.working { border-color: color-mix(in srgb, var(--good) 45%, transparent); }
+.ev.attention { border-color: color-mix(in srgb, var(--warn) 65%, transparent); background: var(--warn-bg); }
+.ev-head { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; }
+.ev-head time { margin-left: auto; font-family: var(--font-mono); font-weight: 400; color: var(--muted); font-size: 10.5px; }
+.tag { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 99px; letter-spacing: .02em; }
+.tag.working { color: var(--good); background: var(--good-bg); }
+.tag.helper { color: var(--helper); background: color-mix(in srgb, var(--helper) 12%, transparent); }
+.tag.done { color: var(--muted); background: var(--line); }
+.ev-body { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; color: var(--muted); min-width: 0; }
+.ev-body svg { width: 14px; height: 14px; margin-top: 2px; }
+.ev-body span { min-width: 0; overflow-wrap: anywhere; }
+.ev.attention .ev-body { color: var(--fg); }
+.ev-actions { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.ev-actions .btn { padding: 4px 10px; font-size: 11.5px; }
+
+/* ---------- modal */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(5, 8, 12, .6); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.modal { width: min(720px, 100%); max-height: min(86vh, 100%); overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.modal-head h3 { margin: 0; font-size: 15px; text-wrap: balance; }
+.modal-body { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; font-size: 13px; }
+.modal-body h4 { margin: 4px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.modal-body p { margin: 0; max-width: 65ch; }
+pre.code { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font: 12px/1.55 var(--font-mono); white-space: pre; }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; font-size: 12.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; font-size: 12.5px; }
+.seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+
+.tl { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 12px; align-items: center; font-size: 12px; }
+.tl-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.tl-track { position: relative; height: 18px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; }
+.tl-track i { position: absolute; top: 3px; width: 4px; height: 10px; border-radius: 2px; transform: translateX(-2px); }
+.tl-axis { grid-column: 2; display: flex; justify-content: space-between; font: 10.5px var(--font-mono); color: var(--muted); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); }
+.legend span { display: inline-flex; gap: 5px; align-items: center; }
+.sum { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.sum th, .sum td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.sum th:first-child, .sum td:first-child { text-align: left; }
+.sum th { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.sum td { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.sum td:first-child { font-family: var(--font-ui); font-weight: 600; }
+.table-wrap { overflow-x: auto; }
+
+/* ---------- narrow screens */
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 260px minmax(0, 1fr); grid-template-areas: "top top" "left stage" "right right"; grid-template-rows: auto minmax(0, 1fr) 340px; }
+  .panel.right { border-left: 0; border-top: 1px solid var(--line); padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+}
+@media (max-width: 760px) {
+  html, body { height: auto; }
+  .app { display: flex; flex-direction: column; height: auto; }
+  .stage { height: 62vh; min-height: 360px; order: 1; }
+  .panel.left { order: 2; border-right: 0; border-top: 1px solid var(--line); max-height: none; overflow: visible; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .panel.right { order: 3; overflow: visible; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .session-list, .feed { overflow: visible; flex: none; }
+  .feed { max-height: none; }
+  .machine .meter, .machine-name { display: none; }
+  .btn span { display: none; }
+  .tool span { display: none; }
+  .tool { padding: 7px; }
+  .clock { display: none; }
+  .tl { grid-template-columns: 84px minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5l8-3 8 3v16h-6v-5h-4v5z" fill="currentColor"/><rect x="7" y="7" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/><rect x="11" y="7" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/><rect x="15" y="7" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/><rect x="7" y="11" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/><rect x="15" y="11" width="2.2" height="2.2" rx=".4" fill="var(--panel)"/></svg>
+      <span class="brand-name">My Office</span>
+      <span class="clock mono" id="clock">--:--</span>
+      <span class="mode-badge" id="modeBadge">DEMO · dữ liệu giả lập</span>
+    </div>
+    <div class="top-actions">
+      <div class="machine" id="machine" title="Bộ nhớ máy đang chạy">
+        <span class="dot dot-warn"></span>
+        <span class="machine-name" id="machineName">Máy</span>
+        <span class="mono muted" id="machineMem">RAM –</span>
+        <span class="meter"><span id="machineBar"></span></span>
+      </div>
+      <button class="btn" id="btnTimeline" type="button"><svg viewBox="0 0 24 24"><path d="M11 6 5 12l6 6M19 6l-6 6 6 6"/></svg><span>Xem lại</span></button>
+      <button class="btn" id="btnSettings" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span>Cài đặt</span></button>
+      <button class="btn btn-icon" id="btnNight" type="button" title="Đổi ngày / đêm trong văn phòng" aria-label="Đổi ngày hoặc đêm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg></button>
+    </div>
+  </header>
+
+  <aside class="panel left" id="leftPanel">
+    <div class="panel-head">
+      <h2>Phiên làm việc</h2>
+      <span class="live"><span class="dot dot-good pulse"></span><span id="liveText">đang nhận dữ liệu</span></span>
+    </div>
+    <p class="sub" id="sessionSub">–</p>
+    <div class="counts">
+      <div class="count"><b class="mono" id="cWorking">0</b><span><i class="dot dot-good"></i>đang làm</span></div>
+      <div class="count"><b class="mono" id="cWaiting">0</b><span><i class="dot dot-warn"></i>chờ duyệt</span></div>
+      <div class="count"><b class="mono" id="cIdle">0</b><span><i class="dot dot-idle"></i>đang nghỉ</span></div>
+    </div>
+    <label class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>
+      <input id="search" type="search" placeholder="Tìm theo tên hoặc thư mục…" autocomplete="off">
+    </label>
+    <div class="session-list" id="sessionList"></div>
+  </aside>
+
+  <main class="stage" id="stage">
+    <canvas id="office" aria-label="Văn phòng isometric, mỗi nhân viên là một phiên Claude Code"></canvas>
+    <div class="toast" id="toast" hidden></div>
+    <div class="avatar-hint" id="avatarHint" hidden>Đang hoá thân: chạm vào sàn để đi, hoặc dùng phím W A S D</div>
+    <nav class="toolbar" aria-label="Điều khiển camera">
+      <button class="tool active" data-view="all" type="button"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9H3z"/></svg><span>Toàn cảnh</span></button>
+      <button class="tool" data-view="desks" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="11" rx="1"/><path d="M8 20h8M12 16v4"/></svg><span>Bàn làm việc</span></button>
+      <button class="tool" data-view="meeting" type="button"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 2 6 5.5"/></svg><span>Phòng họp</span></button>
+      <button class="tool" data-view="servers" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="7" rx="1"/><rect x="4" y="14" width="16" height="7" rx="1"/><path d="M8 6.5h.01M8 17.5h.01"/></svg><span>Máy chủ</span></button>
+      <span class="sep"></span>
+      <button class="tool icon" id="zoomOut" type="button" aria-label="Thu nhỏ"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+      <span class="zoom mono" id="zoomLabel">100%</span>
+      <button class="tool icon" id="zoomIn" type="button" aria-label="Phóng to"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></button>
+      <span class="sep"></span>
+      <button class="tool icon" id="btnFull" type="button" aria-label="Toàn màn hình"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
+      <button class="tool icon" id="btnShot" type="button" aria-label="Chụp ảnh văn phòng"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+      <button class="tool icon" id="btnLabels" type="button" aria-label="Bật tắt nhãn tên"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+      <span class="sep"></span>
+      <button class="tool accent" id="btnAvatar" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v6l-3 7M12 14l3 7M7 11l5-2 5 2"/></svg><span>Hoá thân</span></button>
+    </nav>
+  </main>
+
+  <aside class="panel right" id="rightPanel">
+    <div class="panel-head">
+      <h2>Hoạt động</h2>
+      <span class="live"><span class="dot dot-good pulse"></span>trực tiếp</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="mono" id="sTasks">0</b><span>Việc</span></div>
+      <div class="stat"><b class="mono" id="sRead">0</b><span>Đọc</span></div>
+      <div class="stat"><b class="mono" id="sEdit">0</b><span>Sửa</span></div>
+      <div class="stat"><b class="mono" id="sBash">0</b><span>Lệnh</span></div>
+      <div class="stat wide"><b class="mono" id="sCost">$0</b><span>Giá API ≈</span></div>
+    </div>
+    <button class="link-card" id="linkTimeline" type="button">
+      <svg viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h7"/></svg>
+      <span><b>Dòng thời gian</b><small>Mỗi phiên làm gì, chờ bạn bao lâu</small></span>
+    </button>
+    <button class="link-card" id="linkSummary" type="button">
+      <svg viewBox="0 0 24 24"><path d="M7 4h10v4a5 5 0 0 1-10 0zM12 13v4M8 20h8M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+      <span><b>Tổng kết</b><small>Ai làm nhiều nhất, tốn bao nhiêu</small></span>
+    </button>
+    <div class="filters" id="filters" role="tablist">
+      <button class="chip active" data-filter="all" type="button">Tất cả</button>
+      <button class="chip" data-filter="attention" type="button">Cần chú ý <em id="attnCount">0</em></button>
+      <button class="chip" data-filter="bash" type="button">Lệnh</button>
+      <button class="chip" data-filter="edit" type="button">Sửa file</button>
+      <button class="chip" data-filter="read" type="button">Đọc</button>
+      <button class="chip" data-filter="web" type="button">Web</button>
+      <button class="chip" data-filter="agent" type="button">Trợ lý</button>
+    </div>
+    <div class="feed" id="feed"></div>
+  </aside>
+</div>
+
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h3 id="modalTitle">–</h3>
+      <button class="btn btn-icon" id="modalClose" type="button" aria-label="Đóng"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// Bộ giả lập: tạo dữ liệu giống hệt server để văn phòng chạy được khi không có Claude Code.
+(function () {
+  const rnd = (a) => a[Math.floor(Math.random() * a.length)];
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const MIN = 60 * 1000;
+
+  const SCRIPTS = {
+    'shop-api': {
+      cwd: '~/code/shop-api',
+      tasks: ['Thêm API giỏ hàng', 'Sửa lỗi thanh toán trùng', 'Viết test cho đơn hàng'],
+      actions: [['read', 'Đọc src/routes/cart.ts'], ['edit', 'Sửa src/routes/cart.ts'], ['bash', 'Chạy npm test'], ['read', 'Tìm "createOrder"'], ['edit', 'Sửa src/models/order.ts']],
+      asks: [['Bash', { command: 'npm install zod', description: 'Cài thư viện zod' }], ['Bash', { command: 'npx prisma migrate dev', description: 'Chạy migrate cơ sở dữ liệu' }]],
+    },
+    infra: {
+      cwd: '~/code/infra',
+      tasks: ['Tăng RAM cho máy chủ staging', 'Thêm cảnh báo CPU'],
+      actions: [['read', 'Đọc staging/main.tf'], ['edit', 'Sửa staging/variables.tf'], ['bash', 'Chạy terraform plan'], ['web', 'Tra web "aws t3.large memory"']],
+      asks: [['Bash', { command: 'terraform apply -auto-approve', description: 'Chạy terraform apply' }]],
+    },
+    'landing-page': {
+      cwd: '~/code/landing-page',
+      tasks: ['Làm lại phần hero', 'Tối ưu ảnh cho mobile'],
+      actions: [['read', 'Đọc app/page.tsx'], ['edit', 'Sửa components/Hero.tsx'], ['web', 'Tra web "so sánh 3 mẫu hero trên Dribbble"'], ['bash', 'Chạy npm run build']],
+      asks: [['Bash', { command: 'npm run deploy:preview', description: 'Đẩy bản xem trước' }]],
+      helper: ['general-purpose', 'So sánh 3 mẫu hero trên Dribbble'],
+    },
+    'data-pipeline': {
+      cwd: '~/code/data-pipeline',
+      tasks: ['Sửa job ETL đơn hàng', 'Thêm cột doanh thu theo ngày'],
+      actions: [['edit', 'Sửa etl/orders.py'], ['read', 'Đọc etl/schema.sql'], ['bash', 'Chạy pytest tests/etl'], ['read', 'Tìm "daily_revenue"']],
+      asks: [['Bash', { command: 'python -m etl.backfill --days 30', description: 'Chạy backfill 30 ngày' }]],
+      helper: ['Explore', 'Tìm nơi tính doanh thu'],
+    },
+    'docs-site': {
+      cwd: '~/code/docs-site',
+      tasks: ['Viết trang hướng dẫn cài đặt', 'Sửa link hỏng'],
+      actions: [['read', 'Đọc docs/intro.md'], ['edit', 'Sửa docs/install.md'], ['web', 'Đọc web nodejs.org/en/download'], ['bash', 'Chạy npm run lint:links']],
+      asks: [['Write', { file_path: 'docs/install.md' }]],
+    },
+    'mobile-app': {
+      cwd: '~/code/mobile-app',
+      tasks: ['Đăng nhập Google bằng expo-auth-session', 'Sửa lỗi bàn phím che ô nhập'],
+      actions: [['bash', 'Chạy typecheck'], ['edit', 'Sửa app/login.tsx'], ['read', 'Đọc app.json'], ['web', 'Tra web "expo auth session google"']],
+      asks: [['Bash', { command: 'npx expo prebuild --clean', description: 'Tạo lại thư mục native' }]],
+      helper: ['general-purpose', 'Đọc tài liệu expo-auth-session'],
+    },
+  };
+
+  const now = Date.now();
+  const sessions = Object.entries(SCRIPTS).map(([name, sc], i) => ({
+    id: 'demo-' + name,
+    name,
+    cwd: sc.cwd,
+    title: sc.tasks[0],
+    model: 'claude',
+    status: 'working',
+    activity: { kind: 'think', text: `Nhận việc: "${sc.tasks[0]}"` },
+    startedAt: now - (5 + i * 7) * MIN,
+    lastAt: now - Math.random() * 20000,
+    helpers: [],
+    stats: { read: 1 + i, edit: i % 3, bash: (i + 1) % 3, web: i % 2, agent: 0 },
+    tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    cost: 0.8 + i * 0.9 + Math.random(),
+    approvalId: null,
+    _restUntil: 0,
+  }));
+  const byName = Object.fromEntries(sessions.map((s) => [s.name, s]));
+  const events = [];
+  const approvals = new Map();
+
+  function push(s, kind, text, status, extra = {}) {
+    events.push({ id: uid(), sessionId: s.id, ts: Date.now(), kind, text, status, ...extra });
+    if (events.length > 200) events.shift();
+  }
+
+  function ask(s) {
+    const [tool, input] = rnd(SCRIPTS[s.name].asks);
+    const summary = input.description || `Sửa ${input.file_path}`;
+    const a = { id: uid(), sessionId: s.id, tool, input, summary, cwd: s.cwd, createdAt: Date.now(), state: 'pending' };
+    approvals.set(a.id, a);
+    s.status = 'waiting';
+    s.approvalId = a.id;
+    s.activity = { kind: 'attention', text: `Chờ bạn duyệt: ${summary}` };
+    push(s, 'attention', `Chờ bạn duyệt: ${summary}`, 'attention', { approvalId: a.id });
+  }
+
+  function step(s) {
+    const sc = SCRIPTS[s.name];
+    s.lastAt = Date.now();
+    if (s.status === 'idle') {
+      if (Date.now() < s._restUntil) return;
+      const t = rnd(sc.tasks);
+      s.status = 'working';
+      s.title = t;
+      s.activity = { kind: 'think', text: `Nhận việc: "${t}"` };
+      push(s, 'task', s.activity.text, 'working');
+      return;
+    }
+    if (s.status !== 'working') return;
+    const r = Math.random();
+    if (r < 0.1) return ask(s);
+    if (r < 0.17 && sc.helper && !s.helpers.length) {
+      const h = { id: uid(), type: sc.helper[0], desc: sc.helper[1], until: Date.now() + 14000 + Math.random() * 10000 };
+      s.helpers.push(h);
+      s.stats.agent++;
+      s.activity = { kind: 'agent', text: `Gọi trợ lý ${h.type}`, detail: h.desc };
+      push(s, 'agent', `Gọi trợ lý ${h.type}`, 'helper', { detail: h.desc });
+      return;
+    }
+    if (r < 0.24 && !s.helpers.length) {
+      s.status = 'idle';
+      s._restUntil = Date.now() + 15000 + Math.random() * 25000;
+      s.activity = { kind: 'done', text: 'Vừa xong việc' };
+      push(s, 'done', 'Xong việc, đi pha cà phê', 'done');
+      return;
+    }
+    const [kind, text] = rnd(sc.actions);
+    s.activity = { kind, text };
+    s.stats[kind] = (s.stats[kind] || 0) + 1;
+    s.cost += 0.01 + Math.random() * 0.06;
+    push(s, kind, text, 'working');
+  }
+
+  // trạng thái mở đầu giống một buổi sáng bận rộn
+  [['data-pipeline', 'read', 'Đọc etl/schema.sql'], ['docs-site', 'read', 'Đọc docs/intro.md'], ['mobile-app', 'bash', 'Chạy typecheck'], ['landing-page', 'web', 'Tra web "so sánh 3 mẫu hero"'], ['data-pipeline', 'edit', 'Sửa etl/orders.py'], ['docs-site', 'edit', 'Sửa docs/install.md']]
+    .forEach(([n, k, t], i) => { const s = byName[n]; s.activity = { kind: k, text: t }; push(s, k, t, 'working'); events[events.length - 1].ts = now - (60 - i * 8) * 1000; });
+  byName['data-pipeline'].helpers.push({ id: uid(), type: 'Explore', desc: 'Tìm nơi tính doanh thu', until: now + 20000 });
+  push(byName['data-pipeline'], 'agent', 'Gọi trợ lý Explore', 'helper', { detail: 'Tìm nơi tính doanh thu' });
+  byName['landing-page'].helpers.push({ id: uid(), type: 'general-purpose', desc: 'So sánh 3 mẫu hero trên Dribbble', until: now + 30000 });
+  const mob = byName['mobile-app'];
+  mob.status = 'idle'; mob._restUntil = now + 25000; mob.activity = { kind: 'done', text: 'Vừa xong việc' };
+  push(mob, 'done', 'Xong việc, đi pha cà phê', 'done');
+  ask(byName['shop-api']);
+  ask(byName.infra);
+  SCRIPTS.infra.asks.length && (byName.infra.title = 'Tăng RAM cho máy chủ staging');
+
+  let listener = null;
+  function snapshot() {
+    const used = 0.74 + Math.sin(Date.now() / 20000) * 0.05;
+    return {
+      mode: 'demo',
+      now: Date.now(),
+      machine: { name: 'Máy Mac', memUsed: used * 16 * 2 ** 30, memTotal: 16 * 2 ** 30 },
+      sessions: sessions.map(({ _restUntil, ...s }) => ({ ...s, helpers: s.helpers.map(({ until, ...h }) => h) })),
+      events: events.slice(),
+      approvals: [...approvals.values()].filter((a) => a.state === 'pending'),
+    };
+  }
+  function emit() { listener && listener(snapshot()); }
+
+  let timer = null;
+  window.DemoFeed = {
+    start(cb) {
+      listener = cb;
+      emit();
+      clearInterval(timer);
+      timer = setInterval(() => {
+        const t = Date.now();
+        for (const s of sessions) {
+          for (const h of s.helpers.slice()) {
+            if (t > h.until) {
+              s.helpers.splice(s.helpers.indexOf(h), 1);
+              push(s, 'agent', `Trợ lý ${h.type} báo cáo xong`, 'helper');
+            }
+          }
+        }
+        step(rnd(sessions));
+        if (Math.random() < 0.35) step(rnd(sessions));
+        emit();
+      }, 1700);
+    },
+    stop() { clearInterval(timer); listener = null; },
+    decide(id, behavior) {
+      const a = approvals.get(id);
+      if (!a || a.state !== 'pending') return;
+      a.state = 'decided';
+      const s = sessions.find((x) => x.id === a.sessionId);
+      s.approvalId = null;
+      s.status = 'working';
+      s.lastAt = Date.now();
+      if (behavior === 'allow') {
+        s.stats.bash++;
+        s.activity = { kind: 'bash', text: a.summary };
+        push(s, 'bash', `Đã duyệt: ${a.summary}`, 'working');
+      } else {
+        s.activity = { kind: 'think', text: 'Tìm cách khác' };
+        push(s, 'attention', `Đã từ chối: ${a.summary}`, 'working');
+      }
+      emit();
+    },
+  };
+})();
+</script>
+<script>
+// Engine vẽ văn phòng isometric bằng Canvas 2D (không dùng thư viện).
+// Toạ độ thế giới tính theo ô: x chạy xuống-phải, y chạy xuống-trái, z là chiều cao (px).
+(function () {
+  const T = 32, H = 16;            // nửa chiều rộng / nửa chiều cao một ô
+  const W = 26, D = 20;            // kích thước toà nhà (ô)
+  const WALL = 78;                 // chiều cao tường sau
+  const P = (x, y, z = 0) => [(x - y) * T, (x + y) * H - z];
+
+  const SHIRTS = ['#e46f4f', '#3f8fd8', '#46b07e', '#d9a62c', '#9a6fd6', '#e0607f', '#2fb3b0', '#7f8b99'];
+  const SKINS = ['#f2c9a5', '#e8b48c', '#c98d64', '#f5d4b8', '#a8714d'];
+  const HAIRS = ['#2b2320', '#4a3426', '#151515', '#7a4b2a', '#3a3a44'];
+
+  const C = {
+    ground: '#c3c7c0', road: '#4b5056', roadLine: '#e9e4d2', grass: '#93b56d',
+    floor: '#ece3d3', floorLine: 'rgba(120,90,50,.07)', server: '#59616c', director: '#b88a5d', meeting: '#c7d4dc',
+    lounge: '#e2cfb2', rug: '#b54d43', cafe: '#efe9de', corridor: '#e4e1db',
+    wall: '#f3f1ec', wallTop: '#cfcac0', wallDark: '#dcd7cc', slab: '#9aa0a4',
+    glass: 'rgba(170,210,232,.22)', frame: '#3a4450', window: '#9ccbe4', windowNight: '#f4d58a',
+    desk: '#f7f7f5', wood: '#a8774c', woodDark: '#7c5536', metal: '#7d8791', dark: '#2b323b',
+    sofa: '#4f7fb8', plant: '#5aa05a', pot: '#d7d2c8', screen: '#89c4ff',
+  };
+
+  // ---------------------------------------------------------------- helpers
+  function hex2rgb(h) {
+    if (h.startsWith('rgba') || h.startsWith('rgb')) return null;
+    const n = parseInt(h.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function shade(h, f) {
+    const c = hex2rgb(h);
+    if (!c) return h;
+    const m = (v) => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f)));
+    return `rgb(${m(c[0])},${m(c[1])},${m(c[2])})`;
+  }
+  function poly(ctx, pts, fill, stroke, lw = 1) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+  }
+  function box(ctx, x, y, w, d, h, z, color, o = {}) {
+    const top = [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)];
+    const right = [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)];
+    const left = [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)];
+    if (o.alpha != null) ctx.globalAlpha = o.alpha;
+    poly(ctx, right, o.right || shade(color, -0.14), o.stroke);
+    poly(ctx, left, o.left || shade(color, -0.26), o.stroke);
+    poly(ctx, top, o.top || color, o.stroke);
+    if (o.alpha != null) ctx.globalAlpha = 1;
+  }
+  function floorRect(ctx, x, y, w, d, color, z = 0) {
+    poly(ctx, [P(x, y, z), P(x + w, y, z), P(x + w, y + d, z), P(x, y + d, z)], color);
+  }
+  // hình chữ nhật dán lên tường sau (tường y=0 hoặc x=0)
+  function wallRectY0(ctx, x0, x1, z0, z1, fill, stroke) { poly(ctx, [P(x0, 0.02, z0), P(x1, 0.02, z0), P(x1, 0.02, z1), P(x0, 0.02, z1)], fill, stroke); }
+  function wallRectX0(ctx, y0, y1, z0, z1, fill, stroke) { poly(ctx, [P(0.02, y0, z0), P(0.02, y1, z0), P(0.02, y1, z1), P(0.02, y0, z1)], fill, stroke); }
+  function hash(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return Math.abs(h); }
+  function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+  // ---------------------------------------------------------------- layout
+  const ROOMS = {
+    server: { x: 0, y: 0, w: 6, d: 6, door: 3 },
+    director: { x: 6, y: 0, w: 6, d: 6, door: 9 },
+    meeting: { x: 12, y: 0, w: 7, d: 6, door: 15.5 },
+  };
+  const CLUSTERS = [];
+  for (const cy of [9.6, 14.8]) for (const cx of [1.6, 7.4, 13.2]) CLUSTERS.push({ x: cx, y: cy });
+  function seatsOf(c) {
+    return [
+      { x: c.x + 1, y: c.y - 0.55, face: 1 },
+      { x: c.x + 3, y: c.y + 2.15, face: -1 },
+      { x: c.x + 3, y: c.y - 0.55, face: 1 },
+      { x: c.x + 1, y: c.y + 2.15, face: -1 },
+    ];
+  }
+  const IDLE_SPOTS = [
+    { x: 21.3, y: 1.5, what: 'coffee' }, { x: 22.4, y: 1.5, what: 'coffee' },
+    { x: 21.2, y: 4.6 }, { x: 22.3, y: 4.6 }, { x: 24.4, y: 3.6 },
+    { x: 20.6, y: 11.7 }, { x: 22.4, y: 11.6 }, { x: 24.6, y: 13.8 }, { x: 21.0, y: 15.9 }, { x: 23.4, y: 17.6 },
+  ];
+  const MEETING_SPOTS = [
+    { x: 13.9, y: 2.0 }, { x: 15.1, y: 2.0 }, { x: 16.3, y: 2.0 }, { x: 17.5, y: 2.0 },
+    { x: 13.9, y: 4.5 }, { x: 15.1, y: 4.5 }, { x: 16.3, y: 4.5 }, { x: 17.5, y: 4.5 },
+  ];
+  const ELEVATOR = { x: 0.7, y: 7 };
+  const BOSS_SEAT = { x: 8.6, y: 2.2 };
+  const AISLES = [0.7, 6.5, 12.3, 18.5];
+
+  function roomOf(p) {
+    if (p.y < 6) for (const k in ROOMS) { const r = ROOMS[k]; if (p.x >= r.x && p.x < r.x + r.w) return r; }
+    return null;
+  }
+  // các điểm đi từ p ra hành lang (y = 7)
+  function exitPts(p) {
+    const r = roomOf(p);
+    if (r) return [{ x: r.door, y: Math.min(p.y, 5.2) }, { x: r.door, y: 7 }];
+    if (p.y > 8 && p.x < 19) {
+      const ax = AISLES.reduce((a, b) => (Math.abs(b - p.x) < Math.abs(a - p.x) ? b : a));
+      return [{ x: ax, y: p.y }, { x: ax, y: 7 }];
+    }
+    return [{ x: p.x, y: 7 }];
+  }
+  function route(a, b) {
+    if (Math.hypot(a.x - b.x, a.y - b.y) < 0.05) return [];
+    const ra = roomOf(a), rb = roomOf(b);
+    if (ra && ra === rb) return [b];
+    const out = [...exitPts(a), ...exitPts(b).reverse(), { x: b.x, y: b.y }];
+    return out.filter((p, i) => i === 0 || Math.hypot(p.x - out[i - 1].x, p.y - out[i - 1].y) > 0.01);
+  }
+
+  // ---------------------------------------------------------------- state
+  let canvas, ctx, dpr = 1, cw = 0, ch = 0;
+  const cam = { x: 0, y: 0, z: 1, tx: 0, ty: 0, tz: 1, fit: 1 };
+  let night = false, showLabels = true, avatarMode = false;
+  let selectedId = null, onSelect = () => {}, onZoom = () => {};
+  const chars = new Map();     // id -> character
+  let sessionList = [];
+  let hitboxes = [];
+  const keys = new Set();
+  const cars = [{ t: 0, lane: 0, color: '#e2763a', speed: 0.045 }, { t: 0.55, lane: 1, color: '#f0f0ee', speed: 0.035 }, { t: 0.3, lane: 0, color: '#3f6fb5', speed: 0.04 }];
+  const vacuum = { x: 5, y: 12.5, tx: 10, ty: 13 };
+
+  function makeChar(id, opts) {
+    const h = hash(id);
+    return {
+      id, x: opts.x, y: opts.y, path: [], speed: opts.speed || 2.3,
+      shirt: opts.shirt || SHIRTS[h % SHIRTS.length], skin: SKINS[(h >> 3) % SKINS.length], hair: HAIRS[(h >> 6) % HAIRS.length],
+      hairStyle: (h >> 9) % 3, scale: opts.scale || 1.25, kind: opts.kind || 'agent',
+      name: opts.name || '', sessionId: opts.sessionId || id, status: 'idle', seated: false, face: 1,
+      phase: Math.random() * 10, leaving: false, dest: null, spot: null,
+    };
+  }
+
+  function goTo(c, dest) {
+    if (c.dest && Math.abs(c.dest.x - dest.x) < 0.01 && Math.abs(c.dest.y - dest.y) < 0.01) return;
+    c.dest = { x: dest.x, y: dest.y };
+    c.path = route(c, dest);
+    c.face = dest.face || c.face;
+  }
+
+  // ---------------------------------------------------------------- data in
+  function setSessions(list, sel) {
+    sessionList = list;
+    selectedId = sel;
+    const alive = new Set();
+    const usedIdle = new Set();
+    list.forEach((s, i) => {
+      const cl = CLUSTERS[i % CLUSTERS.length];
+      const seats = seatsOf(cl);
+      const seat = i < CLUSTERS.length ? seats[0] : seats[2];
+      let c = chars.get(s.id);
+      if (!c) {
+        c = makeChar(s.id, { ...ELEVATOR, name: s.name, shirt: SHIRTS[hash(s.name) % SHIRTS.length] });
+        chars.set(s.id, c);
+      }
+      c.name = s.name; c.status = s.status; c.activity = s.activity; c.cluster = i < CLUSTERS.length ? cl : null; c.helperCount = s.helpers.length;
+      alive.add(s.id);
+      if (s.status === 'idle') {
+        if (c.spot == null || usedIdle.has(c.spot)) {
+          let k = hash(s.id) % IDLE_SPOTS.length;
+          while (usedIdle.has(k)) k = (k + 1) % IDLE_SPOTS.length;
+          c.spot = k;
+        }
+        usedIdle.add(c.spot);
+        goTo(c, IDLE_SPOTS[c.spot]);
+      } else {
+        c.spot = null;
+        goTo(c, seat);
+      }
+      // trợ lý: ngồi cùng cụm bàn, hết chỗ thì vào phòng họp
+      s.helpers.forEach((hp, j) => {
+        const hid = s.id + ':' + hp.id;
+        let hc = chars.get(hid);
+        if (!hc) {
+          hc = makeChar(hid, { ...ELEVATOR, kind: 'helper', scale: 1.05, shirt: shade(SHIRTS[hash(s.name) % SHIRTS.length], 0.35), sessionId: s.id, speed: 2.8 });
+          chars.set(hid, hc);
+        }
+        hc.name = hp.type; hc.status = 'working'; hc.leaving = false;
+        alive.add(hid);
+        const dest = i < CLUSTERS.length && j < 3 ? seats[j + 1] : MEETING_SPOTS[(hash(hid) + j) % MEETING_SPOTS.length];
+        goTo(hc, dest);
+      });
+    });
+    for (const [id, c] of chars) {
+      if (c.kind === 'boss' || alive.has(id)) continue;
+      if (!c.leaving) { c.leaving = true; c.status = 'idle'; goTo(c, ELEVATOR); }
+    }
+  }
+
+  // ---------------------------------------------------------------- update
+  function update(dt) {
+    for (const [id, c] of chars) {
+      if (c.kind === 'boss' && avatarMode && (keys.size)) {
+        let dx = 0, dy = 0;
+        if (keys.has('w') || keys.has('arrowup')) { dx -= 1; dy -= 1; }
+        if (keys.has('s') || keys.has('arrowdown')) { dx += 1; dy += 1; }
+        if (keys.has('a') || keys.has('arrowleft')) { dx -= 1; dy += 1; }
+        if (keys.has('d') || keys.has('arrowright')) { dx += 1; dy -= 1; }
+        const l = Math.hypot(dx, dy) || 1;
+        c.path = []; c.dest = null;
+        c.x = Math.max(0.4, Math.min(W - 0.4, c.x + (dx / l) * c.speed * dt));
+        c.y = Math.max(0.4, Math.min(D - 0.4, c.y + (dy / l) * c.speed * dt));
+        c.walking = dx || dy; c.seated = false;
+        if (dx || dy) c.dir = dx - dy >= 0 ? 1 : -1;
+        continue;
+      }
+      if (c.path.length) {
+        const p = c.path[0];
+        const dx = p.x - c.x, dy = p.y - c.y;
+        const dist = Math.hypot(dx, dy);
+        const step = c.speed * dt;
+        c.walking = true; c.seated = false;
+        c.dir = dx - dy >= 0 ? 1 : -1;
+        if (dist <= step) { c.x = p.x; c.y = p.y; c.path.shift(); } else { c.x += (dx / dist) * step; c.y += (dy / dist) * step; }
+      } else {
+        c.walking = false;
+        const atSeat = c.dest && c.status !== 'idle' && c.kind !== 'boss' && !c.leaving;
+        c.seated = atSeat || (c.kind === 'boss' && !avatarMode);
+        if (c.leaving) chars.delete(id);
+      }
+    }
+    // xe chạy quanh toà nhà
+    for (const car of cars) car.t = (car.t + car.speed * dt) % 1;
+    // robot hút bụi
+    const vd = Math.hypot(vacuum.tx - vacuum.x, vacuum.ty - vacuum.y);
+    if (vd < 0.1) { vacuum.tx = 1 + Math.random() * 17; vacuum.ty = 8.3 + Math.random() * 0.5 + (Math.random() < 0.5 ? 0 : 4.6); }
+    else { vacuum.x += ((vacuum.tx - vacuum.x) / vd) * 0.7 * dt; vacuum.y += ((vacuum.ty - vacuum.y) / vd) * 0.7 * dt; }
+    // camera mượt
+    const k = Math.min(1, dt * 6);
+    cam.x += (cam.tx - cam.x) * k; cam.y += (cam.ty - cam.y) * k; cam.z += (cam.tz - cam.z) * k;
+  }
+
+  // ---------------------------------------------------------------- static scene
+  function drawGround(t) {
+    // vỉa hè + đường + cỏ quanh toà nhà
+    floorRect(ctx, -9, -9, W + 18, D + 18, C.grass);
+    floorRect(ctx, -6, -6, W + 12, D + 12, C.ground);
+    // đường phía trước (y lớn) và bên phải (x lớn)
+    floorRect(ctx, -9, D + 3, W + 18, 4, C.road);
+    floorRect(ctx, W + 3, -9, 4, D + 18, C.road);
+    floorRect(ctx, -9, -8, W + 18, 1.2, C.road);
+    for (let x = -8; x < W + 9; x += 2) floorRect(ctx, x, D + 4.92, 1, 0.16, C.roadLine);
+    for (let y = -8; y < D + 9; y += 2) floorRect(ctx, W + 4.92, y, 0.16, 1, C.roadLine);
+    // vạch qua đường
+    for (let i = 0; i < 6; i++) floorRect(ctx, W + 3.2 + i * 0.62, D + 3.3, 0.36, 3.4, 'rgba(240,240,236,.85)');
+    for (let i = 0; i < 6; i++) floorRect(ctx, 3.2, D + 3.2 + i * 0.62, 3.6, 0.36, 'rgba(240,240,236,.85)');
+    // chân toà nhà
+    box(ctx, 0, 0, W, D, 10, -10, C.slab);
+  }
+
+  function drawFloors() {
+    floorRect(ctx, 0, 0, W, D, C.floor);
+    ctx.strokeStyle = C.floorLine; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x++) { const a = P(x, 6), b = P(x, D); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+    for (let y = 6; y <= D; y++) { const a = P(0, y), b = P(W, y); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+    ctx.stroke();
+    floorRect(ctx, 0, 6, 19, 2, C.corridor);
+    floorRect(ctx, 0, 0, 6, 6, C.server);
+    for (let x = 0; x < 6; x++) for (let y = 0; y < 6; y++) if ((x + y) % 2) floorRect(ctx, x, y, 1, 1, 'rgba(255,255,255,.04)');
+    floorRect(ctx, 6, 0, 6, 6, C.director);
+    for (let x = 6; x < 12; x += 0.5) poly(ctx, [P(x, 0), P(x, 6)], null, 'rgba(60,30,10,.12)');
+    floorRect(ctx, 12, 0, 7, 6, C.meeting);
+    floorRect(ctx, 19, 0, 7, 8, C.lounge);
+    floorRect(ctx, 20.3, 3.2, 4.6, 3.6, C.rug);
+    floorRect(ctx, 20.6, 3.5, 4.0, 3.0, shade(C.rug, 0.12));
+    floorRect(ctx, 19, 9, 7, 11, C.cafe);
+    for (let x = 19; x < 26; x++) for (let y = 9; y < 20; y++) if ((x + y) % 2) floorRect(ctx, x, y, 1, 1, 'rgba(0,0,0,.035)');
+    // thảm dưới cụm bàn
+    for (const c of CLUSTERS) floorRect(ctx, c.x - 0.6, c.y - 1.3, 5.2, 4.2, 'rgba(90,110,140,.10)');
+  }
+
+  function drawBackWalls(t) {
+    const wallC = C.wall;
+    // tường y = 0
+    poly(ctx, [P(0, 0, 0), P(W, 0, 0), P(W, 0, WALL), P(0, 0, WALL)], shade(wallC, -0.05));
+    poly(ctx, [P(0, -0.3, WALL), P(W, -0.3, WALL), P(W, 0, WALL), P(0, 0, WALL)], C.wallTop);
+    // tường x = 0
+    poly(ctx, [P(0, 0, 0), P(0, D, 0), P(0, D, WALL), P(0, 0, WALL)], shade(wallC, -0.13));
+    poly(ctx, [P(-0.3, 0, WALL), P(0, 0, WALL), P(0, D, WALL), P(-0.3, D, WALL)], C.wallTop);
+    // chân tường
+    poly(ctx, [P(0, 0.02, 0), P(W, 0.02, 0), P(W, 0.02, 5), P(0, 0.02, 5)], C.wallDark);
+    poly(ctx, [P(0.02, 0, 0), P(0.02, D, 0), P(0.02, D, 5), P(0.02, 0, 5)], shade(C.wallDark, -0.08));
+    // tường phòng máy chủ tối màu
+    wallRectY0(ctx, 0, 6, 5, WALL, '#3c4652');
+    wallRectX0(ctx, 0, 6, 5, WALL, '#323b46');
+    // cửa sổ
+    const win = night ? C.windowNight : C.window;
+    for (const [a, b] of [[7, 9], [9.4, 11.4], [19.6, 21.6], [24, 25.6]]) {
+      wallRectY0(ctx, a, b, 26, 64, win, C.frame);
+      poly(ctx, [P((a + b) / 2, 0.02, 26), P((a + b) / 2, 0.02, 64)], null, C.frame, 1.5);
+    }
+    for (const [a, b] of [[9, 11.5], [12.5, 15], [16, 18.5]]) {
+      wallRectX0(ctx, a, b, 26, 64, win, C.frame);
+      poly(ctx, [P(0.02, (a + b) / 2, 26), P(0.02, (a + b) / 2, 64)], null, C.frame, 1.5);
+    }
+    // thang máy
+    wallRectX0(ctx, 6.3, 7.8, 0, 56, '#8f99a3', C.frame);
+    poly(ctx, [P(0.03, 7.05, 0), P(0.03, 7.05, 56)], null, '#5a636c', 1.5);
+    wallRectX0(ctx, 6.0, 6.2, 26, 32, '#e9a640');
+    // biển "MY OFFICE" trên tường phòng giám đốc
+    ctx.save();
+    const o = P(6.4, 0.03, 70);
+    ctx.setTransform(...wallMat(0.5, o));
+    ctx.fillStyle = '#2f5d46'; rr(ctx, 0, 0, 74, 18, 3); ctx.fill();
+    ctx.fillStyle = '#f3e7c8'; ctx.font = '700 10px "Be Vietnam Pro", system-ui, sans-serif'; ctx.textBaseline = 'middle';
+    ctx.fillText('MY OFFICE', 10, 9.5);
+    ctx.restore();
+    // bảng trắng phòng họp
+    wallRectY0(ctx, 13, 17.5, 22, 62, '#ffffff', '#9aa3ab');
+    ctx.save();
+    ctx.setTransform(...wallMat(0.5, P(13.3, 0.03, 58)));
+    ctx.fillStyle = '#e46f4f'; ctx.font = '800 8px "Be Vietnam Pro", system-ui, sans-serif'; ctx.textBaseline = 'top';
+    ctx.fillText('SHIP IT ✓', 4, 2);
+    const bars = [12, 18, 15, 24, 20, 28, 31];
+    bars.forEach((b, i) => { ctx.fillStyle = '#3f8fd8'; ctx.fillRect(8 + i * 11, 34 - b, 7, b); });
+    ctx.restore();
+    // TV phòng máy chủ
+    ctx.save();
+    ctx.setTransform(...wallMat(-0.5, P(0.03, 4.8, 66)));
+    ctx.fillStyle = '#10161d'; rr(ctx, 0, 0, 58, 32, 2); ctx.fill();
+    ctx.fillStyle = '#6fe0a0'; ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.textBaseline = 'top';
+    ctx.fillText(`${Math.round(ramPct)}%`, 6, 5);
+    ctx.fillStyle = '#2c3a48'; ctx.fillRect(6, 21, 46, 4);
+    ctx.fillStyle = '#e9a640'; ctx.fillRect(6, 21, 46 * ramPct / 100, 4);
+    ctx.restore();
+    // đồng hồ treo tường
+    const cc = P(17.2, 0.03, 70);
+    ctx.save(); ctx.setTransform(...wallMat(0.5, cc));
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, 7); ctx.fill(); ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
+    const d = new Date(); const a1 = (d.getHours() % 12 + d.getMinutes() / 60) / 12 * 6.283, a2 = d.getMinutes() / 60 * 6.283;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.sin(a1) * 3.4, -Math.cos(a1) * 3.4); ctx.moveTo(0, 0); ctx.lineTo(Math.sin(a2) * 5, -Math.cos(a2) * 5); ctx.stroke();
+    ctx.restore();
+  }
+  // ma trận vẽ phẳng lên tường: uy = 0.5 cho tường y=0, -0.5 cho tường x=0 (chữ chạy về phía y giảm)
+  let viewMat = [1, 0, 0, 1, 0, 0];
+  function wallMat(uy, o) {
+    const [z, , , , e, f] = viewMat;
+    return [z, z * uy, 0, z, z * o[0] + e, z * o[1] + f];
+  }
+
+  // ---------------------------------------------------------------- furniture items (sắp theo chiều sâu)
+  let ramPct = 70;
+  function staticItems() {
+    const items = [];
+    const add = (k, fn) => items.push({ k, fn });
+    // vách kính chia phòng, cắt thành đoạn 1 ô để sắp chiều sâu đúng
+    const glassSeg = (x, y, w, d) => add(x + y + (w + d) / 2 + 0.05, () => {
+      box(ctx, x, y, w, d, 62, 0, '#c9e2ef', { alpha: 0.28, top: 'rgba(58,68,80,.9)' });
+      box(ctx, x, y, w, d, 3, 62, C.frame);
+    });
+    for (const gx of [6, 12, 19]) for (let y = 0; y < 6; y++) glassSeg(gx - 0.05, y, 0.1, 1);
+    for (let x = 0; x < 19; x++) {
+      const isDoor = Object.values(ROOMS).some((r) => x + 0.5 > r.door - 0.8 && x + 0.5 < r.door + 0.8);
+      if (!isDoor) glassSeg(x, 5.95, 1, 0.1);
+    }
+    // phòng máy chủ: tủ rack
+    for (const ry of [0.4, 3.0]) for (let i = 0; i < 4; i++) {
+      const x = 0.5 + i * 1.25, y = ry;
+      add(x + y + 1.2, (t) => {
+        box(ctx, x, y, 1.0, 1.1, 64, 0, '#252c35');
+        for (let r = 0; r < 7; r++) {
+          const z = 8 + r * 7.5;
+          poly(ctx, [P(x + 0.08, y + 1.1, z), P(x + 0.92, y + 1.1, z), P(x + 0.92, y + 1.1, z + 5), P(x + 0.08, y + 1.1, z + 5)], '#323b46');
+          const on = Math.sin(t * 3 + i * 1.7 + r * 2.3 + ry) > 0;
+          const [lx, ly] = P(x + 0.2, y + 1.1, z + 2.5);
+          ctx.fillStyle = on ? '#4fe08a' : '#1f6b3f'; ctx.fillRect(lx - 1, ly - 1, 2.4, 2.4);
+          const [lx2, ly2] = P(x + 0.34, y + 1.1, z + 2.5);
+          ctx.fillStyle = Math.sin(t * 5 + r + i) > 0.6 ? '#ffb547' : '#5a4320'; ctx.fillRect(lx2 - 1, ly2 - 1, 2.4, 2.4);
+        }
+      });
+    }
+    // phòng giám đốc
+    add(7.6 + 1.8 + 1.2, () => { box(ctx, 7.6, 1.2, 2.6, 1.2, 26, 0, C.wood); box(ctx, 7.6, 1.2, 2.6, 0.12, 4, 26, C.woodDark); box(ctx, 8.2, 1.4, 0.9, 0.12, 14, 26, C.dark, { left: '#7fb8f0' }); box(ctx, 9.5, 1.6, 0.3, 0.3, 3, 26, '#e7e2d6'); });
+    add(6.4 + 0.5 + 0.6, () => { box(ctx, 6.3, 0.3, 0.7, 2.4, 68, 0, C.woodDark); for (let s = 0; s < 4; s++) for (let b = 0; b < 6; b++) box(ctx, 6.95, 0.45 + b * 0.36, 0.05, 0.28, 10 + (b % 3) * 2, 8 + s * 15, ['#c4553f', '#3f7fc4', '#e2b23f', '#4c9a6a'][(s + b) % 4]); });
+    add(11.0 + 4.8, () => plant(11.0, 4.8, 1.1));
+    add(10.8 + 0.5, () => { box(ctx, 10.6, 0.4, 0.1, 0.1, 50, 0, C.dark); poly(ctx, [P(10.35, 0.15, 48), P(10.95, 0.15, 48), P(10.95, 0.75, 48), P(10.35, 0.75, 48)], night ? '#ffd27a' : '#f2ead8'); });
+    // phòng họp
+    add(13.4 + 2.6 + 2.1, () => { box(ctx, 13.4, 2.6, 4.6, 1.3, 22, 0, '#f4f4f2'); box(ctx, 14.2, 2.9, 0.5, 0.4, 2, 22, '#c9d1d8'); box(ctx, 16.6, 3.1, 0.6, 0.3, 2, 22, '#e46f4f'); });
+    for (const s of MEETING_SPOTS) add(s.x + s.y - 0.2, () => chair(s.x, s.y, s.y < 3 ? 1 : -1, '#2f3640'));
+    add(18.3 + 5.3, () => plant(18.3, 5.3, 1));
+    // phòng nghỉ
+    add(20.4 + 0.4 + 1, () => { box(ctx, 20.2, 0.3, 4.0, 0.8, 30, 0, '#8b6a4c'); box(ctx, 20.2, 0.3, 4.0, 0.8, 3, 30, '#e9e5dc'); box(ctx, 20.6, 0.4, 0.7, 0.55, 22, 33, '#2b323b', { left: '#4c5560' }); box(ctx, 22.0, 0.45, 0.5, 0.45, 12, 33, '#d84b3f'); box(ctx, 23.2, 0.4, 0.6, 0.5, 6, 33, '#f2efe8'); });
+    add(21 + 6.1, () => { box(ctx, 20.6, 5.6, 3.2, 1.0, 12, 0, C.sofa); box(ctx, 20.6, 6.3, 3.2, 0.35, 26, 0, shade(C.sofa, -0.1)); });
+    add(22.3 + 4.4, () => { box(ctx, 21.6, 4.0, 1.5, 0.8, 11, 0, C.wood); });
+    add(24.8 + 3.0, () => { box(ctx, 24.2, 2.6, 1.0, 1.1, 14, 0, '#d97e3f'); box(ctx, 25.0, 2.6, 0.25, 1.1, 26, 0, shade('#d97e3f', -0.1)); });
+    add(25.2 + 6.8, () => plant(25.3, 7.0, 1.3));
+    add(19.6 + 7.4, () => { box(ctx, 19.3, 7.2, 0.5, 0.5, 46, 0, '#6e7781'); poly(ctx, [P(19.0, 6.9, 44), P(20.1, 6.9, 44), P(20.1, 8.0, 44), P(19.0, 8.0, 44)], night ? '#ffd27a' : '#fbf3df'); });
+    // quán cà phê: bàn tròn
+    const tables = [[21.5, 11.0], [24.0, 12.0], [21.8, 15.0], [24.3, 16.2], [21.0, 18.3]];
+    for (const [x, y] of tables) {
+      add(x + y + 0.3, () => { box(ctx, x - 0.08, y - 0.08, 0.16, 0.16, 18, 0, C.metal); box(ctx, x - 0.55, y - 0.55, 1.1, 1.1, 2.5, 18, '#ffffff'); box(ctx, x - 0.1, y - 0.2, 0.18, 0.18, 4, 20.5, ['#e9a640', '#e46f4f', '#46b07e'][Math.floor(x) % 3]); });
+    }
+    add(25.3 + 19.2, () => plant(25.3, 19.3, 1.2));
+    add(19.4 + 9.4, () => plant(19.4, 9.4, 0.9));
+    // khu làm việc: cụm bàn + ghế
+    CLUSTERS.forEach((cl, ci) => {
+      const seats = seatsOf(cl);
+      seats.forEach((s, si) => add(s.x + s.y - 0.3, () => chair(s.x, s.y + (s.face > 0 ? -0.15 : 0.15), s.face, '#3a434e')));
+      add(cl.x + 2 + cl.y + 0.8, (t) => {
+        box(ctx, cl.x, cl.y, 4, 1.6, 22, 0, C.desk);
+        box(ctx, cl.x + 1.98, cl.y + 0.1, 0.04, 1.4, 6, 22, '#cfd4d8');
+        box(ctx, cl.x, cl.y + 0.78, 4, 0.04, 9, 22, '#cfd4d8');
+        seats.forEach((s, si) => {
+          const north = s.face > 0;
+          const my = north ? cl.y + 0.5 : cl.y + 1.0;
+          const on = seatBusy(ci, si);
+          box(ctx, s.x - 0.42, my, 0.84, 0.08, 15, 26, C.dark, { left: north ? '#20262d' : (on ? (night ? '#9fd2ff' : '#7fb8f0') : '#3a4552') });
+          box(ctx, s.x - 0.06, my + 0.02, 0.12, 0.06, 4, 22, C.metal);
+          box(ctx, s.x - 0.3, north ? cl.y + 0.15 : cl.y + 1.2, 0.6, 0.22, 1.2, 22, '#d9dde1');
+          if (si === 1) box(ctx, s.x + 0.7, cl.y + 1.25, 0.18, 0.18, 5, 22, ['#e46f4f', '#3f8fd8', '#d9a62c'][ci % 3]);
+        });
+      });
+    });
+    add(0.6 + 19.4, () => plant(0.6, 19.3, 1.2));
+    add(18.4 + 19.2, () => plant(18.4, 19.3, 1.1));
+    add(18.4 + 8.6, () => plant(18.3, 8.6, 1));
+    // cây ngoài đường
+    for (const [x, y] of [[-2, 4], [-2, 10], [-2, 16], [4, D + 1.6], [11, D + 1.6], [18, D + 1.6], [W + 1.6, 3], [W + 1.6, 12]]) add(x + y + 0.5, () => tree(x, y));
+    // đèn giao thông
+    for (const [x, y] of [[W + 2.4, D + 2.4], [-1.6, D + 2.4]]) add(x + y, (t) => { box(ctx, x, y, 0.12, 0.12, 70, 0, '#30363d'); box(ctx, x - 0.12, y - 0.12, 0.36, 0.3, 22, 62, '#1f2429'); const g = Math.floor(t / 4) % 2; const [lx, ly] = P(x + 0.06, y + 0.18, 76); ctx.fillStyle = g ? '#4fe08a' : '#ff5a4a'; ctx.beginPath(); ctx.arc(lx, ly, 2.4, 0, 7); ctx.fill(); });
+    return items;
+  }
+  let seatBusy = () => false;
+
+  function chair(x, y, face, color) {
+    box(ctx, x - 0.25, y - 0.25, 0.5, 0.5, 3, 11, color);
+    box(ctx, x - 0.04, y - 0.04, 0.08, 0.08, 11, 0, C.metal);
+    const by = face > 0 ? y - 0.3 : y + 0.22;
+    box(ctx, x - 0.25, by, 0.5, 0.08, 14, 14, shade(color, 0.08));
+  }
+  function plant(x, y, s) {
+    box(ctx, x - 0.25 * s, y - 0.25 * s, 0.5 * s, 0.5 * s, 12 * s, 0, C.pot);
+    const [px, py] = P(x, y, 12 * s);
+    ctx.fillStyle = shade(C.plant, -0.15);
+    for (const [ox, oy, r] of [[-6, -10, 8], [6, -12, 8], [0, -20, 9], [0, -8, 8]]) { ctx.beginPath(); ctx.arc(px + ox * s, py + oy * s, r * s, 0, 7); ctx.fill(); }
+    ctx.fillStyle = C.plant;
+    for (const [ox, oy, r] of [[-4, -13, 6], [5, -15, 6], [0, -22, 6]]) { ctx.beginPath(); ctx.arc(px + ox * s, py + oy * s, r * s, 0, 7); ctx.fill(); }
+  }
+  function tree(x, y) {
+    box(ctx, x - 0.1, y - 0.1, 0.2, 0.2, 26, 0, '#6b4b33');
+    const [px, py] = P(x, y, 26);
+    ctx.fillStyle = '#4f8f45';
+    for (const [ox, oy, r] of [[-10, -6, 13], [10, -6, 13], [0, -18, 15], [0, -2, 12]]) { ctx.beginPath(); ctx.arc(px + ox, py + oy, r, 0, 7); ctx.fill(); }
+    ctx.fillStyle = '#67a85a';
+    for (const [ox, oy, r] of [[-5, -14, 8], [6, -16, 7]]) { ctx.beginPath(); ctx.arc(px + ox, py + oy, r, 0, 7); ctx.fill(); }
+  }
+
+  function carItems(t) {
+    return cars.map((car) => {
+      // làn 0: đường phía trước (chạy theo x), làn 1: đường bên phải (chạy theo y)
+      const pos = -10 + car.t * (W + 22);
+      const x = car.lane === 0 ? pos : W + 3.6 + 0.2;
+      const y = car.lane === 0 ? D + 3.6 : D + 12 - car.t * (D + 22);
+      const w = car.lane === 0 ? 1.8 : 0.9, d = car.lane === 0 ? 0.9 : 1.8;
+      return { k: x + y + 1.3, fn: () => {
+        box(ctx, x, y, w, d, 10, 3, car.color);
+        box(ctx, x + (car.lane === 0 ? 0.35 : 0.08), y + (car.lane === 0 ? 0.08 : 0.35), car.lane === 0 ? 1.0 : 0.74, car.lane === 0 ? 0.74 : 1.0, 8, 13, '#2c3a4a', { top: shade(car.color, 0.1) });
+        if (night) { const [hx, hy] = P(x + w, y + d / 2, 8); ctx.fillStyle = 'rgba(255,230,160,.9)'; ctx.beginPath(); ctx.arc(hx, hy, 2.5, 0, 7); ctx.fill(); }
+      } };
+    });
+  }
+
+  // ---------------------------------------------------------------- character
+  const labels = [];
+  function drawChar(c, t) {
+    const [sx, sy] = P(c.x, c.y);
+    const s = c.scale;
+    const bob = c.walking ? Math.abs(Math.sin(t * 10 + c.phase)) * 2 : 0;
+    const seatDrop = c.seated ? 7 : 0;
+    // bóng
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    ctx.beginPath(); ctx.ellipse(sx, sy, 9 * s, 4.5 * s, 0, 0, 7); ctx.fill();
+    if (c.sessionId === selectedId && c.kind !== 'helper') {
+      ctx.strokeStyle = '#e9a640'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(sx, sy, 14, 7, 0, 0, 7); ctx.stroke();
+    }
+    const base = sy - seatDrop - bob;
+    // chân
+    if (!c.seated) {
+      const sw = c.walking ? Math.sin(t * 10 + c.phase) * 3 : 0;
+      ctx.fillStyle = '#2d3440';
+      ctx.fillRect(sx - 4 * s + sw * 0.4, base - 11 * s, 3.2 * s, 11 * s);
+      ctx.fillRect(sx + 1 * s - sw * 0.4, base - 11 * s, 3.2 * s, 11 * s);
+    } else {
+      ctx.fillStyle = '#2d3440';
+      ctx.fillRect(sx - 4.5 * s, base - 5 * s, 9 * s, 4 * s);
+    }
+    // thân
+    const bodyTop = base - (c.seated ? 20 : 25) * s;
+    ctx.fillStyle = c.shirt;
+    rr(ctx, sx - 6.5 * s, bodyTop, 13 * s, 15 * s, 4 * s); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(sx + 1 * s, bodyTop + 2, 5 * s, 12 * s);
+    // tay
+    ctx.fillStyle = shade(c.shirt, -0.12);
+    const typing = c.seated && c.status === 'working' ? Math.sin(t * 18 + c.phase) * 1.2 : 0;
+    ctx.fillRect(sx - 8.5 * s, bodyTop + 2 + typing, 3 * s, 10 * s);
+    ctx.fillRect(sx + 5.5 * s, bodyTop + 2 - typing, 3 * s, 10 * s);
+    // đầu
+    const hy = bodyTop - 7 * s;
+    ctx.fillStyle = c.skin; ctx.beginPath(); ctx.arc(sx, hy, 7.5 * s, 0, 7); ctx.fill();
+    ctx.fillStyle = c.hair;
+    ctx.beginPath();
+    if (c.hairStyle === 0) { ctx.arc(sx, hy - 1.5 * s, 7.8 * s, Math.PI * 1.02, Math.PI * 1.98); ctx.fill(); }
+    else if (c.hairStyle === 1) { ctx.arc(sx, hy - 1 * s, 8 * s, Math.PI * 0.9, Math.PI * 2.1); ctx.fill(); ctx.fillRect(sx - 8 * s, hy - 1, 3 * s, 8 * s); ctx.fillRect(sx + 5 * s, hy - 1, 3 * s, 8 * s); }
+    else { ctx.arc(sx, hy - 2 * s, 7.6 * s, Math.PI, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(sx + 3 * s, hy - 9 * s, 3.5 * s, 0, 7); ctx.fill(); }
+    // mắt (nhìn theo hướng đi)
+    if (!(c.seated && c.face > 0) || c.kind === 'boss') {
+      ctx.fillStyle = '#222';
+      const ex = (c.dir || 1) * 1.5;
+      ctx.fillRect(sx - 3 * s + ex, hy + 0.5, 1.6, 2); ctx.fillRect(sx + 1.6 * s + ex, hy + 0.5, 1.6, 2);
+    }
+    if (c.kind === 'boss') { ctx.fillStyle = '#e9a640'; ctx.fillRect(sx - 1.2, bodyTop + 1, 2.4, 9); }
+    hitboxes.push({ id: c.sessionId, x: sx, y: hy, r: 16, kind: c.kind });
+    // bong bóng trạng thái
+    if (c.status === 'waiting') {
+      const by = hy - 20 - Math.abs(Math.sin(t * 4)) * 4;
+      ctx.fillStyle = '#e9a640'; ctx.beginPath(); ctx.arc(sx, by, 8, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(sx - 3, by + 6); ctx.lineTo(sx, by + 11); ctx.lineTo(sx + 3, by + 6); ctx.fill();
+      ctx.fillStyle = '#1b1305'; ctx.font = '800 11px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', sx, by + 0.5);
+    } else if (c.status === 'working' && c.seated && c.kind !== 'helper') {
+      const by = hy - 17;
+      ctx.fillStyle = 'rgba(255,255,255,.95)'; rr(ctx, sx + 6, by - 6, 20, 11, 5); ctx.fill();
+      for (let i = 0; i < 3; i++) { ctx.fillStyle = Math.floor(t * 3) % 3 === i ? '#3f8fd8' : '#a9b4c0'; ctx.beginPath(); ctx.arc(sx + 11 + i * 5, by - 0.5, 1.6, 0, 7); ctx.fill(); }
+    } else if (c.status === 'idle' && !c.walking && c.kind === 'agent') {
+      // cốc cà phê + hơi nóng
+      ctx.fillStyle = '#fff'; ctx.fillRect(sx + 7, bodyTop + 4, 5, 6); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(sx + 13, bodyTop + 7, 2, -1.5, 1.5); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); const st = Math.sin(t * 3) * 1.5; ctx.moveTo(sx + 9 + st, bodyTop + 2); ctx.quadraticCurveTo(sx + 11, bodyTop - 2, sx + 9 - st, bodyTop - 6); ctx.stroke();
+    }
+    if (showLabels && c.kind !== 'helper') labels.push({ wx: sx, wy: hy - (c.status === 'waiting' ? 34 : 15), text: c.kind === 'boss' ? 'Giám đốc (bạn)' : c.name, color: c.kind === 'boss' ? '#e9a640' : statusColor(c.status), strong: c.sessionId === selectedId });
+  }
+  function statusColor(s) { return s === 'working' ? '#3fbf7f' : s === 'waiting' ? '#e9a640' : '#8b95a7'; }
+
+  // ---------------------------------------------------------------- frame
+  let items = null, last = 0, running = true;
+  function frame(ts) {
+    if (!running) return;
+    const t = ts / 1000;
+    const dt = Math.min(0.05, last ? t - last : 0.016);
+    last = t;
+    update(dt);
+    render(t);
+    requestAnimationFrame(frame);
+  }
+
+  function render(t) {
+    const w = cw, h = ch;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = night ? '#2a3140' : '#6f7a84';
+    ctx.fillRect(0, 0, w * dpr, h * dpr);
+    const z = cam.z * dpr;
+    viewMat = [z, 0, 0, z, (w / 2) * dpr - cam.x * z, (h / 2) * dpr - cam.y * z];
+    ctx.setTransform(...viewMat);
+    hitboxes = []; labels.length = 0;
+
+    drawGround(t);
+    drawFloors();
+    drawBackWalls(t);
+
+    // robot hút bụi
+    const list = items.concat(carItems(t));
+    list.push({ k: vacuum.x + vacuum.y, fn: () => { box(ctx, vacuum.x - 0.22, vacuum.y - 0.22, 0.44, 0.44, 4, 0, '#2b2f36'); const [vx, vy] = P(vacuum.x, vacuum.y, 4.5); ctx.fillStyle = Math.sin(t * 6) > 0 ? '#4fe08a' : '#2a6b47'; ctx.fillRect(vx - 1, vy - 1, 2, 2); } });
+    for (const c of chars.values()) list.push({ k: c.x + c.y + (c.seated ? 0.05 : 0), fn: () => drawChar(c, t) });
+    list.sort((a, b) => a.k - b.k);
+    for (const it of list) it.fn(t);
+
+    // nhãn cụm bàn
+    if (showLabels && cam.z > 0.85) {
+      for (const c of chars.values()) {
+        if (c.kind !== 'agent' || !c.cluster || c.status === 'idle' || c.leaving) continue;
+        const [lx, ly] = P(c.cluster.x + 2, c.cluster.y + 0.8, 34);
+        labels.push({ wx: lx, wy: ly + 26, text: `Nhóm ${c.name} · ${1 + (c.helperCount || 0)}`, color: '#3f8fd8', small: true });
+      }
+    }
+
+    // ban đêm: phủ tối + quầng sáng
+    if (night) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = 'rgba(12,20,48,.48)';
+      ctx.fillRect(0, 0, w * dpr, h * dpr);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.setTransform(...viewMat);
+      const glow = (x, y, z, r, a) => { const [gx, gy] = P(x, y, z); const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, r); g.addColorStop(0, `rgba(255,200,120,${a})`); g.addColorStop(1, 'rgba(255,200,120,0)'); ctx.fillStyle = g; ctx.fillRect(gx - r, gy - r, r * 2, r * 2); };
+      for (const c of chars.values()) if (c.seated && c.status !== 'idle' && c.kind !== 'boss') glow(c.x, c.y, 20, 46, 0.22);
+      glow(10.6, 0.5, 46, 70, 0.25); glow(19.5, 7.4, 44, 70, 0.25); glow(22, 0.8, 30, 60, 0.15);
+      for (const x of [3, 9, 15]) for (const y of [11, 16]) glow(x, y, 70, 120, 0.08);
+      ctx.restore();
+    }
+
+    // nhãn vẽ theo toạ độ màn hình cho nét
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // ưu tiên: đang chọn > chờ duyệt > tên người > nhãn nhóm; nhãn sau đè lên nhãn trước thì bỏ
+    const prio = (L) => (L.strong ? 0 : L.color === '#e9a640' ? 1 : L.small ? 3 : 2);
+    labels.sort((a, b) => prio(a) - prio(b));
+    const placed = [];
+    for (const L of labels) {
+      const sx = (L.wx - cam.x) * cam.z + w / 2, sy = (L.wy - cam.y) * cam.z + h / 2;
+      if (sx < -100 || sx > w + 100 || sy < -40 || sy > h + 40) continue;
+      ctx.font = `${L.strong ? 700 : 600} ${L.small ? 10 : 11}px "Be Vietnam Pro", system-ui, sans-serif`;
+      const tw = ctx.measureText(L.text).width;
+      const pw = tw + (L.small ? 14 : 22), ph = L.small ? 17 : 20;
+      const x = sx - pw / 2;
+      let y = sy - ph;
+      const hit = (yy) => placed.find((r) => x < r.x + r.w + 2 && x + pw + 2 > r.x && yy < r.y + r.h + 2 && yy + ph + 2 > r.y);
+      let tries = 0;
+      while (hit(y) && tries < 3) { y = hit(y).y - ph - 3; tries++; }
+      if (hit(y)) continue;
+      placed.push({ x, y, w: pw, h: ph });
+      ctx.fillStyle = L.strong ? 'rgba(233,166,64,.96)' : 'rgba(22,28,38,.88)';
+      rr(ctx, x, y, pw, ph, ph / 2); ctx.fill();
+      if (!L.small) { ctx.fillStyle = L.strong ? '#1b1305' : L.color; ctx.beginPath(); ctx.arc(x + 9, y + ph / 2, 3, 0, 7); ctx.fill(); }
+      ctx.fillStyle = L.strong ? '#1b1305' : '#f1f3f6'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      ctx.fillText(L.text, x + (L.small ? 7 : 16), y + ph / 2 + 0.5);
+    }
+    ctx.textAlign = 'left';
+  }
+
+  // ---------------------------------------------------------------- camera & input
+  const VIEWS = { all: { x: W / 2 - 1, y: D / 2, z: 1.15 }, desks: { x: 9, y: 13.5, z: 1.7 }, meeting: { x: 15.5, y: 3, z: 2.1 }, servers: { x: 3, y: 3, z: 2.1 } };
+  function computeFit() {
+    const bw = (W + D + 10) * T, bh = (W + D + 8) * H + WALL;
+    cam.fit = Math.min(cw / bw, ch / bh) * 1.12;
+  }
+  function setView(name) {
+    const v = VIEWS[name] || VIEWS.all;
+    const [sx, sy] = P(v.x, v.y);
+    cam.tx = sx; cam.ty = sy - (name === 'all' ? 20 : 0); cam.tz = cam.fit * v.z * (name === 'all' && cw < 600 ? 1.35 : 1);
+    onZoom(cam.tz / cam.fit);
+  }
+  function focusOn(id) {
+    const c = chars.get(id);
+    if (!c) return;
+    const [sx, sy] = P(c.dest?.x ?? c.x, c.dest?.y ?? c.y);
+    cam.tx = sx; cam.ty = sy - 20; cam.tz = Math.max(cam.tz, cam.fit * 1.9);
+    onZoom(cam.tz / cam.fit);
+  }
+  function zoomBy(f) {
+    cam.tz = Math.max(cam.fit * 0.6, Math.min(cam.fit * 4, cam.tz * f));
+    onZoom(cam.tz / cam.fit);
+  }
+  function screenToWorld(px, py) {
+    const sx = (px - cw / 2) / cam.z + cam.x, sy = (py - ch / 2) / cam.z + cam.y;
+    return { x: (sx / T + sy / H) / 2, y: (sy / H - sx / T) / 2 };
+  }
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    const first = !cw;
+    cw = r.width; ch = r.height;
+    canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
+    const oldFit = cam.fit;
+    computeFit();
+    if (first) { setView('all'); cam.x = cam.tx; cam.y = cam.ty; cam.z = cam.tz; }
+    else { const k = cam.fit / oldFit; cam.z *= k; cam.tz *= k; }
+  }
+
+  function bindInput() {
+    const pointers = new Map();
+    let drag = null, pinch = null, moved = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+      canvas.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      moved = 0;
+      if (pointers.size === 1) drag = { x: e.clientX, y: e.clientY, cx: cam.tx, cy: cam.ty };
+      if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: cam.tz }; drag = null; }
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pinch && pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        cam.tz = Math.max(cam.fit * 0.6, Math.min(cam.fit * 4, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
+        onZoom(cam.tz / cam.fit);
+      } else if (drag) {
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
+        if (moved > 4) canvas.classList.add('dragging');
+        cam.tx = drag.cx - dx / cam.z; cam.ty = drag.cy - dy / cam.z;
+        cam.x = cam.tx; cam.y = cam.ty;
+      }
+    });
+    const end = (e) => {
+      const wasTap = pointers.size === 1 && moved < 6 && !pinch;
+      pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinch = null;
+      if (!pointers.size) { drag = null; canvas.classList.remove('dragging'); }
+      if (wasTap && e.type === 'pointerup') tap(e);
+    };
+    canvas.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
+    canvas.addEventListener('wheel', (e) => { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
+    window.addEventListener('keydown', (e) => {
+      if (!avatarMode || /input|textarea/i.test(e.target.tagName)) return;
+      const k = e.key.toLowerCase();
+      if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) { keys.add(k); e.preventDefault(); }
+    });
+    window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+    window.addEventListener('blur', () => keys.clear());
+  }
+
+  function tap(e) {
+    const r = canvas.getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    let best = null, bd = 1e9;
+    for (const hb of hitboxes) {
+      const sx = (hb.x - cam.x) * cam.z + cw / 2, sy = (hb.y - cam.y) * cam.z + ch / 2;
+      const d = Math.hypot(px - sx, py - (sy + 8 * cam.z));
+      if (d < Math.max(18, hb.r * cam.z) && d < bd && hb.kind !== 'boss') { bd = d; best = hb; }
+    }
+    if (best) { onSelect(best.id); return; }
+    if (avatarMode) {
+      const w = screenToWorld(px, py);
+      if (w.x > 0.3 && w.x < W - 0.3 && w.y > 0.3 && w.y < D - 0.3) {
+        const boss = chars.get('__boss');
+        boss.dest = null; goTo(boss, w);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- public api
+  window.Office = {
+    init(el, opts = {}) {
+      canvas = el; ctx = canvas.getContext('2d');
+      onSelect = opts.onSelect || onSelect; onZoom = opts.onZoom || onZoom;
+      items = staticItems();
+      const boss = makeChar('__boss', { ...BOSS_SEAT, kind: 'boss', shirt: '#2f3a48', speed: 3 });
+      boss.status = 'boss'; boss.dest = { ...BOSS_SEAT }; boss.face = 1; boss.dir = 1;
+      chars.set('__boss', boss);
+      resize();
+      new ResizeObserver(resize).observe(canvas);
+      bindInput();
+      document.addEventListener('visibilitychange', () => { running = !document.hidden; if (running) { last = 0; requestAnimationFrame(frame); } });
+      requestAnimationFrame(frame);
+    },
+    setSessions(list, sel) {
+      setSessions(list, sel);
+      // ghế nào đang có người làm việc thì bật màn hình
+      const busy = new Set();
+      for (const c of chars.values()) {
+        if (!c.dest || c.status === 'idle' || c.leaving || c.kind === 'boss') continue;
+        CLUSTERS.forEach((cl, ci) => seatsOf(cl).forEach((s, si) => { if (Math.abs(s.x - c.dest.x) < 0.01 && Math.abs(s.y - c.dest.y) < 0.01) busy.add(ci + ':' + si); }));
+      }
+      seatBusy = (ci, si) => busy.has(ci + ':' + si);
+    },
+    setSelected(id) { selectedId = id; },
+    setView, zoomBy, focusOn,
+    setRam(p) { ramPct = p; },
+    setNight(v) { night = v; },
+    isNight: () => night,
+    toggleLabels() { showLabels = !showLabels; return showLabels; },
+    setAvatar(on) {
+      avatarMode = on;
+      const boss = chars.get('__boss');
+      if (!on) { boss.dest = null; goTo(boss, BOSS_SEAT); }
+      else { boss.seated = false; focusOn('__boss'); cam.tz = cam.fit * 2.2; onZoom(2.2); }
+    },
+    screenshot() { return canvas.toDataURL('image/png'); },
+  };
+})();
+</script>
+<script>
+// Điều phối giao diện: nhận snapshot (từ server thật hoặc bộ giả lập), vẽ hai bảng bên và đưa dữ liệu cho văn phòng.
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const SHIRTS = ['#e46f4f', '#3f8fd8', '#46b07e', '#d9a62c', '#9a6fd6', '#e0607f', '#2fb3b0', '#7f8b99'];
+  const hash = (s) => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return Math.abs(h); };
+  const ICONS = {
+    bash: '<svg viewBox="0 0 24 24"><path d="m5 7 5 5-5 5M12 18h7"/></svg>',
+    edit: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+    read: '<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>',
+    web: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>',
+    agent: '<svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg>',
+    done: '<svg viewBox="0 0 24 24"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2"/></svg>',
+    attention: '<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20zM12 10v4M12 17h.01"/></svg>',
+    task: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>',
+    think: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>',
+    plan: '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+    tool: '<svg viewBox="0 0 24 24"><path d="M14 6a4 4 0 0 0 5 5l-8 8-3-3 8-8z"/></svg>',
+    idle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
+  };
+  const FILTER_KINDS = { bash: ['bash'], edit: ['edit'], read: ['read'], web: ['web'], agent: ['agent'] };
+
+  let state = { sessions: [], events: [], approvals: [], machine: null, mode: 'demo', now: Date.now() };
+  let selected = null, filter = 'all', query = '', mode = null, es = null, avatar = false;
+  const seenApprovals = new Set();
+
+  // ---------------------------------------------------------------- data source
+  function useDemo() {
+    if (es) { es.close(); es = null; }
+    mode = 'demo';
+    window.DemoFeed.start(onSnapshot);
+    setBadge();
+  }
+  function useLive(onFail) {
+    window.DemoFeed.stop();
+    let got = false;
+    try { es = new EventSource('api/stream'); } catch { return onFail && onFail(); }
+    const timer = setTimeout(() => { if (!got) { es && es.close(); es = null; onFail && onFail(); } }, 2500);
+    es.onmessage = (e) => {
+      got = true; clearTimeout(timer); mode = 'live'; setBadge();
+      try { onSnapshot(JSON.parse(e.data)); } catch {}
+    };
+    es.onerror = () => { if (!got) { clearTimeout(timer); es && es.close(); es = null; onFail && onFail(); } else { $('liveText').textContent = 'mất kết nối, đang thử lại…'; } };
+    es.onopen = () => { $('liveText').textContent = 'đang nhận dữ liệu'; };
+  }
+  function setBadge() {
+    const b = $('modeBadge');
+    b.textContent = mode === 'live' ? 'Trực tiếp · Claude Code' : 'DEMO · dữ liệu giả lập';
+    b.classList.toggle('live', mode === 'live');
+  }
+
+  function onSnapshot(snap) {
+    state = snap;
+    for (const a of snap.approvals) {
+      if (!seenApprovals.has(a.id)) { seenApprovals.add(a.id); if (seenApprovals.size > 2 || mode === 'live') toast(`${nameOf(a.sessionId)} xin quyền: ${a.summary}`); }
+    }
+    window.Office.setSessions(snap.sessions, selected);
+    if (snap.machine) {
+      const pct = (snap.machine.memUsed / snap.machine.memTotal) * 100;
+      window.Office.setRam(pct);
+      $('machineName').textContent = snap.machine.name;
+      $('machineMem').textContent = `RAM ${Math.round(pct)}% · ${(snap.machine.memUsed / 2 ** 30).toFixed(1)} GB`;
+      $('machineBar').style.width = pct + '%';
+    }
+    renderSessions();
+    renderStats();
+    renderFeed();
+    const waiting = snap.approvals.length;
+    document.title = waiting ? `(${waiting}) My Office` : 'My Office';
+  }
+  const nameOf = (id) => state.sessions.find((s) => s.id === id)?.name || 'Phiên';
+
+  // ---------------------------------------------------------------- left panel
+  function fmtDur(ms) {
+    const m = Math.max(0, Math.floor(ms / 60000));
+    return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  }
+  function ago(ms) {
+    const m = Math.floor(ms / 60000);
+    if (m < 1) return '< 1 phút';
+    if (m < 60) return `${m} phút`;
+    return `${Math.floor(m / 60)} giờ`;
+  }
+  function renderSessions() {
+    const now = Date.now();
+    const list = state.sessions.filter((s) => !query || (s.name + ' ' + s.cwd + ' ' + (s.title || '')).toLowerCase().includes(query));
+    const groups = [
+      ['waiting', 'Cần bạn duyệt', 'warn'],
+      ['working', 'Đang làm', ''],
+      ['idle', 'Đang nghỉ', ''],
+    ];
+    const counts = { working: 0, waiting: 0, idle: 0 };
+    state.sessions.forEach((s) => counts[s.status]++);
+    $('cWorking').textContent = counts.working; $('cWaiting').textContent = counts.waiting; $('cIdle').textContent = counts.idle;
+    const helpers = state.sessions.reduce((n, s) => n + s.helpers.length, 0);
+    $('sessionSub').textContent = `${state.sessions.length} phiên · ${helpers} trợ lý đang chạy`;
+    const maxCost = Math.max(0.01, ...state.sessions.map((s) => s.cost || 0));
+    let html = '';
+    for (const [st, label, cls] of groups) {
+      const g = list.filter((s) => s.status === st);
+      if (!g.length) continue;
+      html += `<div class="group-label ${cls}">${label} <em>${g.length}</em></div>`;
+      for (const s of g) {
+        const color = SHIRTS[hash(s.name) % SHIRTS.length];
+        const appr = state.approvals.find((a) => a.sessionId === s.id);
+        const top = st === 'waiting' ? `chờ ${ago(now - (appr?.createdAt || now))}` : st === 'working' ? fmtDur(now - (s.startedAt || now)) : `nghỉ ${ago(now - (s.lastAt || now))}`;
+        const dotCls = st === 'working' ? 'dot-good' : st === 'waiting' ? 'dot-warn' : 'dot-idle';
+        html += `<button class="session ${st} ${selected === s.id ? 'selected' : ''}" data-id="${esc(s.id)}" type="button">
+          <span class="avatar" style="background:${color}">${esc(s.name.slice(0, 1).toUpperCase())}<i class="st ${dotCls}"></i></span>
+          <span class="s-main"><span class="s-name">${esc(s.name)}</span><span class="s-act">${st === 'waiting' ? '⚠ ' : ''}${esc(s.activity?.text || '')}</span></span>
+          <span class="s-meta"><b>${esc(top)}</b><br>$${(s.cost || 0).toFixed(2)}</span>
+          <span class="s-bar"><span style="width:${Math.max(6, ((s.cost || 0) / maxCost) * 100)}%"></span></span>
+          ${s.helpers.map((h) => `<span class="helper-row">✦ <b>${esc(h.type)}</b> · ${esc(h.desc || 'đang làm')}</span>`).join('')}
+        </button>`;
+      }
+    }
+    if (!html) html = state.sessions.length
+      ? '<p class="empty">Không có phiên nào khớp với từ khoá.</p>'
+      : '<p class="empty">Chưa thấy phiên Claude Code nào trong 24 giờ qua. Mở một terminal và chạy <code>claude</code>, nhân viên mới sẽ bước ra từ thang máy.</p>';
+    $('sessionList').innerHTML = html;
+  }
+
+  // ---------------------------------------------------------------- right panel
+  function renderStats() {
+    const t = { read: 0, edit: 0, bash: 0 }; let cost = 0;
+    for (const s of state.sessions) { t.read += s.stats.read || 0; t.edit += s.stats.edit || 0; t.bash += s.stats.bash || 0; cost += s.cost || 0; }
+    $('sTasks').textContent = state.sessions.length;
+    $('sRead').textContent = t.read; $('sEdit').textContent = t.edit; $('sBash').textContent = t.bash;
+    $('sCost').textContent = '$' + cost.toFixed(2);
+    const n = state.approvals.length;
+    const em = $('attnCount'); em.textContent = n; em.classList.toggle('zero', !n);
+  }
+  function hhmm(ts) { const d = new Date(ts); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+  function renderFeed() {
+    const pending = new Set(state.approvals.map((a) => a.id));
+    let evs = state.events.slice().reverse();
+    if (filter === 'attention') evs = evs.filter((e) => e.approvalId && pending.has(e.approvalId));
+    else if (FILTER_KINDS[filter]) evs = evs.filter((e) => FILTER_KINDS[filter].includes(e.kind));
+    if (selected) evs = evs.filter((e) => e.sessionId === selected);
+    // yêu cầu duyệt còn treo luôn nổi lên đầu
+    evs.sort((a, b) => (pending.has(b.approvalId) ? 1 : 0) - (pending.has(a.approvalId) ? 1 : 0));
+    evs = evs.slice(0, 60);
+    const html = evs.map((e) => {
+      const open = e.approvalId && pending.has(e.approvalId);
+      const cls = open ? 'attention' : e.status === 'working' && e === evs.find((x) => x.sessionId === e.sessionId) ? 'working' : '';
+      const tag = open ? '' : e.status === 'helper' ? '<span class="tag helper">trợ lý</span>' : e.status === 'done' ? '<span class="tag done">xong</span>' : cls === 'working' ? '<span class="tag working">đang làm</span>' : '';
+      return `<div class="ev ${cls}" data-sid="${esc(e.sessionId)}">
+        <div class="ev-head">${open ? '<span style="color:var(--warn)">⚠</span>' : `<i class="dot ${e.status === 'helper' ? 'dot-helper' : e.status === 'done' ? 'dot-idle' : 'dot-good'}"></i>`}<span>${esc(nameOf(e.sessionId))}</span>${tag}<time>${hhmm(e.ts)}</time></div>
+        <div class="ev-body">${ICONS[e.kind] || ICONS.tool}<span>${esc(e.text)}${e.detail ? ` · <i>${esc(e.detail)}</i>` : ''}</span></div>
+        ${open ? `<div class="ev-actions"><button class="btn" data-open="${esc(e.approvalId)}" type="button">Mở để duyệt</button><button class="btn btn-primary" data-allow="${esc(e.approvalId)}" type="button">Duyệt</button><button class="btn btn-danger" data-deny="${esc(e.approvalId)}" type="button">Từ chối</button></div>` : ''}
+      </div>`;
+    }).join('');
+    const feed = $('feed');
+    const key = evs.map((e) => e.id + (pending.has(e.approvalId) ? 'p' : '')).join(',') + selected;
+    if (feed.dataset.key === key) return;
+    feed.dataset.key = key;
+    feed.innerHTML = html || `<p class="empty">${selected ? 'Phiên này chưa có hoạt động khớp bộ lọc.' : 'Chưa có hoạt động nào.'}</p>`;
+  }
+
+  // ---------------------------------------------------------------- approvals
+  function decide(id, behavior) {
+    const a = state.approvals.find((x) => x.id === id);
+    if (mode === 'live') {
+      fetch(`api/approvals/${encodeURIComponent(id)}/decide`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ behavior }) })
+        .catch(() => toast('Không gửi được quyết định. Kiểm tra server My Office còn chạy không.'));
+    } else {
+      window.DemoFeed.decide(id, behavior);
+    }
+    if (a) toast(behavior === 'allow' ? `Đã duyệt cho ${nameOf(a.sessionId)}` : `Đã từ chối yêu cầu của ${nameOf(a.sessionId)}`);
+    closeModal();
+  }
+  function openApproval(id) {
+    const a = state.approvals.find((x) => x.id === id);
+    if (!a) return toast('Yêu cầu này đã được xử lý.');
+    const s = state.sessions.find((x) => x.id === a.sessionId);
+    const cmd = a.tool === 'Bash' ? a.input.command : JSON.stringify(a.input, null, 2);
+    openModal(`${nameOf(a.sessionId)} xin quyền ${a.tool === 'Bash' ? 'chạy lệnh' : 'dùng ' + a.tool}`, `
+      <dl class="kv">
+        <dt>Việc đang làm</dt><dd>${esc(s?.title || s?.activity?.text || '–')}</dd>
+        <dt>Thư mục</dt><dd class="mono">${esc(a.cwd || s?.cwd || '–')}</dd>
+        <dt>Công cụ</dt><dd>${esc(a.tool)}</dd>
+        <dt>Mô tả</dt><dd>${esc(a.summary)}</dd>
+      </dl>
+      <h4>Nội dung</h4>
+      <pre class="code">${esc(cmd)}</pre>
+      <div class="row">
+        <button class="btn btn-primary" data-allow="${esc(a.id)}" type="button">Duyệt và chạy</button>
+        <button class="btn btn-danger" data-deny="${esc(a.id)}" type="button">Từ chối</button>
+      </div>
+      <p class="muted">${mode === 'live' ? 'Quyết định được gửi thẳng về terminal của phiên này qua hook.' : 'Đây là dữ liệu giả lập. Khi chạy thật, quyết định sẽ gửi về terminal qua hook.'}</p>`);
+  }
+
+  // ---------------------------------------------------------------- modals
+  function openModal(title, html) {
+    $('modalTitle').textContent = title;
+    $('modalBody').innerHTML = html;
+    $('modal').hidden = false;
+    $('modalClose').focus();
+  }
+  function closeModal() { $('modal').hidden = true; }
+
+  function openTimeline() {
+    const now = Date.now();
+    const span = 60 * 60 * 1000;
+    const from = now - span;
+    const colors = { bash: 'var(--info)', edit: 'var(--good)', read: 'var(--muted)', web: 'var(--helper)', agent: 'var(--helper)', attention: 'var(--warn)', done: 'var(--fg)', task: 'var(--accent)' };
+    const rows = state.sessions.map((s) => {
+      const ev = state.events.filter((e) => e.sessionId === s.id && e.ts >= from);
+      const marks = ev.map((e) => `<i style="left:${((e.ts - from) / span) * 100}%;background:${colors[e.kind] || 'var(--muted)'}" title="${esc(hhmm(e.ts) + ' ' + e.text)}"></i>`).join('');
+      return `<span class="tl-name">${esc(s.name)}</span><span class="tl-track">${marks}</span>`;
+    }).join('');
+    const waits = state.approvals.map((a) => `<li><b>${esc(nameOf(a.sessionId))}</b> chờ bạn ${ago(now - a.createdAt)}: ${esc(a.summary)}</li>`).join('');
+    openModal('Dòng thời gian 60 phút qua', `
+      <div class="legend"><span><i class="dot" style="background:var(--info)"></i>Lệnh</span><span><i class="dot" style="background:var(--good)"></i>Sửa file</span><span><i class="dot" style="background:var(--muted)"></i>Đọc</span><span><i class="dot" style="background:var(--helper)"></i>Web / trợ lý</span><span><i class="dot" style="background:var(--warn)"></i>Chờ duyệt</span><span><i class="dot" style="background:var(--accent)"></i>Nhận việc</span></div>
+      <div class="tl">${rows || '<span class="muted">Chưa có phiên nào.</span>'}<span class="tl-axis"><span>${hhmm(from)}</span><span>${hhmm(from + span / 2)}</span><span>${hhmm(now)}</span></span></div>
+      <h4>Đang chờ bạn</h4>
+      ${waits ? `<ul>${waits}</ul>` : '<p class="muted">Không ai phải chờ. Tốt lắm, sếp.</p>'}`);
+  }
+
+  function openSummary() {
+    const rows = state.sessions.slice().sort((a, b) => (b.cost || 0) - (a.cost || 0)).map((s) => {
+      const st = s.stats;
+      const actions = (st.read || 0) + (st.edit || 0) + (st.bash || 0) + (st.web || 0) + (st.agent || 0);
+      return `<tr><td>${esc(s.name)}</td><td>${actions}</td><td>${st.edit || 0}</td><td>${st.bash || 0}</td><td>${st.agent || 0}</td><td>$${(s.cost || 0).toFixed(2)}</td></tr>`;
+    }).join('');
+    const total = state.sessions.reduce((n, s) => n + (s.cost || 0), 0);
+    const top = state.sessions.slice().sort((a, b) => ((b.stats.edit || 0) + (b.stats.bash || 0)) - ((a.stats.edit || 0) + (a.stats.bash || 0)))[0];
+    openModal('Tổng kết', `
+      <p>${top ? `Nhân viên chăm nhất: <b>${esc(top.name)}</b>. ` : ''}Tổng chi phí ước tính: <b class="mono">$${total.toFixed(2)}</b>${mode === 'live' ? ' (tính từ số token trong transcript, theo bảng giá trong server.js).' : ' (dữ liệu giả lập).'}</p>
+      <div class="table-wrap"><table class="sum"><thead><tr><th>Phiên</th><th>Thao tác</th><th>Sửa</th><th>Lệnh</th><th>Trợ lý</th><th>Giá ≈</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+  }
+
+  function openSettings() {
+    const live = mode === 'live';
+    openModal('Cài đặt', `
+      <h4>Nguồn dữ liệu</h4>
+      <div class="row"><div class="seg"><button type="button" id="segDemo" class="${live ? '' : 'on'}">Giả lập</button><button type="button" id="segLive" class="${live ? 'on' : ''}">Claude Code thật</button></div></div>
+      <p class="muted">Chế độ thật cần chạy server trên máy bạn: <span class="mono">node my-office/server.js</span>, rồi mở <span class="mono">http://127.0.0.1:4317</span>. Server đọc transcript trong <span class="mono">~/.claude/projects</span>.</p>
+      <h4>Duyệt quyền ngay trong văn phòng</h4>
+      <p>Thêm hook này vào <span class="mono">~/.claude/settings.json</span>. Khi Claude xin quyền, yêu cầu hiện ở cột Hoạt động. Nếu văn phòng không mở, terminal vẫn hỏi như bình thường.</p>
+      <pre class="code">{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /đường/dẫn/tới/my-office/hooks/office-approve.js",
+            "timeout": 130
+          }
+        ]
+      }
+    ]
+  }
+}</pre>
+      <h4>Phím tắt</h4>
+      <dl class="kv"><dt>Kéo chuột</dt><dd>Di chuyển camera</dd><dt>Cuộn / chụm hai ngón</dt><dd>Phóng to, thu nhỏ</dd><dt>Bấm vào nhân viên</dt><dd>Xem phiên đó</dd><dt>W A S D</dt><dd>Đi lại khi đang hoá thân</dd><dt>Esc</dt><dd>Bỏ chọn, đóng hộp thoại</dd></dl>`);
+    $('segDemo').onclick = () => { useDemo(); closeModal(); toast('Đã chuyển sang dữ liệu giả lập'); };
+    $('segLive').onclick = () => {
+      closeModal();
+      useLive(() => { toast('Không kết nối được server. Chạy node my-office/server.js trên máy bạn rồi mở localhost:4317.'); useDemo(); });
+    };
+  }
+
+  // ---------------------------------------------------------------- misc ui
+  let toastTimer;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 3200);
+  }
+  function select(id) {
+    selected = selected === id ? null : id;
+    window.Office.setSelected(selected);
+    if (selected) window.Office.focusOn(selected);
+    renderSessions(); renderFeed();
+  }
+
+  function bind() {
+    $('sessionList').addEventListener('click', (e) => { const b = e.target.closest('.session'); if (b) select(b.dataset.id); });
+    $('search').addEventListener('input', (e) => { query = e.target.value.trim().toLowerCase(); renderSessions(); });
+    document.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-allow],[data-deny],[data-open]');
+      if (!t) return;
+      if (t.dataset.allow) decide(t.dataset.allow, 'allow');
+      else if (t.dataset.deny) decide(t.dataset.deny, 'deny');
+      else openApproval(t.dataset.open);
+    });
+    $('filters').addEventListener('click', (e) => {
+      const c = e.target.closest('.chip'); if (!c) return;
+      filter = c.dataset.filter;
+      document.querySelectorAll('.chip').forEach((x) => x.classList.toggle('active', x === c));
+      renderFeed();
+    });
+    document.querySelectorAll('.tool[data-view]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('.tool[data-view]').forEach((x) => x.classList.toggle('active', x === b));
+      window.Office.setView(b.dataset.view);
+    }));
+    $('zoomIn').onclick = () => window.Office.zoomBy(1.2);
+    $('zoomOut').onclick = () => window.Office.zoomBy(1 / 1.2);
+    $('btnFull').onclick = () => {
+      const st = $('stage');
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else if (st.requestFullscreen) st.requestFullscreen().catch(() => toast('Trình duyệt này không cho toàn màn hình.'));
+      else toast('Trình duyệt này không cho toàn màn hình.');
+    };
+    $('btnShot').onclick = () => {
+      const url = window.Office.screenshot();
+      openModal('Ảnh chụp văn phòng', `<img src="${url}" alt="Ảnh chụp văn phòng lúc ${hhmm(Date.now())}" style="width:100%;border-radius:8px;border:1px solid var(--line)"><p class="muted">Nhấn giữ hoặc chuột phải vào ảnh để lưu.</p>${mode === 'live' ? `<a class="btn btn-primary" href="${url}" download="my-office-${Date.now()}.png">Tải ảnh PNG</a>` : ''}`);
+    };
+    $('btnLabels').onclick = () => { const on = window.Office.toggleLabels(); toast(on ? 'Hiện nhãn tên' : 'Ẩn nhãn tên'); };
+    $('btnAvatar').onclick = () => {
+      avatar = !avatar;
+      $('btnAvatar').classList.toggle('active', avatar);
+      $('avatarHint').hidden = !avatar;
+      window.Office.setAvatar(avatar);
+    };
+    $('btnNight').onclick = () => { const n = !window.Office.isNight(); window.Office.setNight(n); toast(n ? 'Văn phòng ban đêm' : 'Văn phòng ban ngày'); };
+    $('btnTimeline').onclick = openTimeline;
+    $('linkTimeline').onclick = openTimeline;
+    $('linkSummary').onclick = openSummary;
+    $('btnSettings').onclick = openSettings;
+    $('modalClose').onclick = closeModal;
+    $('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (!$('modal').hidden) closeModal();
+      else if (selected) select(selected);
+    });
+    const tick = () => { const d = new Date(); $('clock').textContent = hhmm(d); };
+    tick(); setInterval(tick, 10000);
+    setInterval(() => renderSessions(), 15000); // cập nhật "chờ x phút"
+  }
+
+  // ---------------------------------------------------------------- boot
+  window.Office.init($('office'), {
+    onSelect: select,
+    onZoom: (z) => { $('zoomLabel').textContent = Math.round(z * 100) + '%'; },
+  });
+  bind();
+  const h = new Date().getHours();
+  if (h >= 19 || h < 6) window.Office.setNight(true);
+  // chạy từ server cục bộ => thử dữ liệu thật trước, không được thì dùng giả lập
+  if (new URLSearchParams(location.search).has('demo')) useDemo();
+  else if (/^https?:$/.test(location.protocol) && /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(location.hostname) || new URLSearchParams(location.search).has('live')) {
+    useLive(useDemo);
+  } else useDemo();
+})();
+</script>
