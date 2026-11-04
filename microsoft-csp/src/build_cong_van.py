@@ -20,10 +20,10 @@ META = {
 }
 # ==== BODY ====
 pa('Trung tâm Dịch vụ Số cá nhân (VNPT VAS) thuộc Tổng Công ty Truyền thông (VNPT-Media), Tập đoàn Bưu chính Viễn thông Việt Nam, gửi lời chào trân trọng tới Quý Công ty.')
-pa('VNPT VAS đang triển khai kinh doanh bản quyền phần mềm Microsoft cho khách hàng doanh nghiệp, hộ kinh doanh, cơ quan tổ chức và khách hàng cá nhân trên hệ thống kênh bán của VNPT. Tổng Công ty Truyền thông đăng ký tham gia chương trình Microsoft AI Cloud Partner Program và Cloud Solution Provider (CSP) với vai trò đại lý (Indirect Reseller); VNPT VAS là đơn vị vận hành theo ủy quyền của Tổng Công ty.')
+pa('VNPT VAS đang triển khai kinh doanh bản quyền phần mềm Microsoft cho khách hàng doanh nghiệp, hộ kinh doanh, cơ quan tổ chức và khách hàng cá nhân trên hệ thống kênh bán của VNPT. Tổng Công ty Truyền thông là đối tác trong chương trình Microsoft AI Cloud Partner Program và triển khai kinh doanh trong chương trình Cloud Solution Provider (CSP) với vai trò đại lý (Indirect Reseller); VNPT VAS là đơn vị vận hành theo ủy quyền của Tổng Công ty.')
 pa('Được biết Quý Công ty là nhà phân phối CSP (Indirect Provider) được Microsoft công nhận tại Việt Nam, VNPT VAS đề nghị Quý Công ty xem xét hợp tác với các nội dung sau:')
 h1('1. Tiếp nhận Tổng Công ty Truyền thông là đại lý CSP của Quý Công ty')
-bl('Gửi lời mời thiết lập quan hệ đại lý trên Partner Center sau khi VNPT-Media hoàn tất đăng ký Indirect Reseller;')
+bl('Gửi lời mời thiết lập quan hệ đại lý trên tài khoản Partner Center hiện có của VNPT-Media;')
 bl('Cung cấp mẫu hợp đồng đại lý và danh mục hồ sơ Quý Công ty yêu cầu.')
 h1('2. Cung cấp thông tin chính sách hợp tác')
 bl('Danh mục sản phẩm và chính sách giá, chiết khấu theo từng nhóm: Microsoft 365, Copilot; bản quyền vĩnh viễn Windows, Office, Windows Server, SQL Server; Microsoft 365 cho khách hàng cá nhân qua kênh phân phối điện tử (nếu có);')
