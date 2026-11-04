@@ -7,6 +7,22 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.formatting.rule import CellIsRule
 
 OUT = sys.argv[1]
+# Đã chốt / giả định (theo phản hồi 04/11/2026): đầu việc -> (trạng thái, ghi chú)
+DONE = {
+    'Rà soát Tập đoàn': ('Hoàn thành', 'Chưa có Partner ID: đăng ký mới cho VNPT-Media'),
+    'Chốt tên miền': ('Hoàn thành', 'vnptmedia.vn'),
+    'Chỉ định Primary contact': ('Đang làm', 'Đang dùng đầu mối giả định, cần chốt người cụ thể'),
+}
+FILLED = {
+    1: 'Chưa có. Đăng ký mới',
+    2: 'vnptmedia.vn',
+    3: 'Giả định, cần chốt',
+    4: 'Giả định, cần chốt',
+    5: 'Anh Hưng (cần họ tên đầy đủ, chức danh)',
+    6: 'Giả định, cần chốt',
+    7: 'Giả định: 2-3 NPP lấy từ danh sách Indirect Provider trên Partner Center',
+    8: '20/11/2026 (giả định)',
+}
 F = 'Times New Roman'
 HDR = PatternFill('solid', fgColor='1F4E79')
 GRP = PatternFill('solid', fgColor='DDEBF7')
@@ -98,7 +114,8 @@ for group, items in TASKS:
     ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=9)
     r += 1
     for i, (task, out, unit, s, e) in enumerate(items, 1):
-        vals = [f'{group.split(".")[0].split()[1]}.{i}', task, out, unit, '', s, e, 'Chưa bắt đầu', '']
+        st, note = next((v for k, v in DONE.items() if task.startswith(k)), ('Chưa bắt đầu', ''))
+        vals = [f'{group.split(".")[0].split()[1]}.{i}', task, out, unit, '', s, e, st, note]
         for col, v in enumerate(vals, 1):
             c = ws.cell(r, col, v)
             c.font = Font(name=F, size=11); c.border = BOX
@@ -163,7 +180,7 @@ s3['A1'] = 'THÔNG TIN CẦN ANH/CHỊ CUNG CẤP'
 s3['A1'].font = Font(name=F, bold=True, size=13)
 hdr(s3, 3, ['STT', 'Thông tin', 'Dùng cho', 'Giá trị'], [6, 55, 40, 40])
 need = [
-    ('VNPT/VNPT-Media đã có Partner ID chưa? Nếu có: PGA ID', 'Bước 0, quyết định đăng ký mới hay thêm location'),
+    ('VNPT/VNPT-Media đã có Partner ID chưa?', 'Bước 0, quyết định đăng ký mới hay thêm location'),
     ('Tên miền dùng cho tenant đối tác', 'Bước 1'),
     ('Họ tên, email 2 Global Admin', 'Bước 1, 2, 4'),
     ('Primary contact, security contact, đầu mối kế toán', 'Bước 1, 4'),
@@ -173,7 +190,7 @@ need = [
     ('Hạn phản hồi đề nghị NPP', 'Công văn 02'),
 ]
 for i, (a, b) in enumerate(need, 4):
-    for col, v in enumerate([i - 3, a, b, ''], 1):
+    for col, v in enumerate([i - 3, a, b, FILLED.get(i - 3, '')], 1):
         c = s3.cell(i, col, v); c.font = Font(name=F); c.border = BOX
         c.alignment = CEN if col == 1 else WRAP
 

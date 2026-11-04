@@ -27,13 +27,13 @@ Phương án đã chốt:
 
 ### Bước 0. Chủ trương nội bộ (tuần 1-2)
 1. Trình Lãnh đạo Trung tâm phê duyệt chủ trương (**[01-To-trinh-chu-truong-Microsoft-CSP.docx](01-To-trinh-chu-truong-Microsoft-CSP.docx)**).
-2. Rà soát trong Tập đoàn: VNPT hoặc đơn vị thành viên đã có Partner ID / tài khoản Partner Center chưa. Nếu VNPT-Media đã có, chỉ cần thêm location/tenant cho VNPT VAS, không đăng ký mới.
+2. ~~Rà soát Partner ID trong Tập đoàn~~: **đã xác nhận chưa có**, đăng ký mới cho VNPT-Media.
 3. Xin ý kiến Ban Pháp chế Tổng Công ty và đề nghị VNPT-Media ủy quyền cho Giám đốc Trung tâm: đăng ký, ký thỏa thuận điện tử với Microsoft, ký hợp đồng với nhà phân phối.
 4. Kiểm tra ngành nghề trên Giấy chứng nhận ĐKDN của VNPT-Media có hoạt động mua bán phần mềm (ví dụ 4651, 4741, 6201, 6209). Thiếu thì bổ sung.
 
 ### Bước 1. Chuẩn bị tài khoản và hồ sơ pháp lý (tuần 2-3)
 1. Tên pháp nhân, địa chỉ, MST **khớp tuyệt đối** với ĐKDN (Microsoft đối chiếu khi xác minh).
-2. Tạo tenant Microsoft Entra ID dùng tên miền công ty (ví dụ `vnptmedia.vn` hoặc tên miền Trung tâm), không dùng email cá nhân/Gmail.
+2. Tạo tenant Microsoft Entra ID dùng tên miền **`vnptmedia.vn`** (đã chốt), không dùng email cá nhân/Gmail.
 3. Chỉ định: Global Admin (2 người), người liên hệ chính (Primary contact), đầu mối an ninh, đầu mối kế toán/thanh toán. Bật MFA cho tất cả.
 4. Bộ hồ sơ scan: ĐKDN, giấy ủy quyền, giấy tờ người đại diện, thư xác nhận công tác của người liên hệ chính, hóa đơn/sao kê có tên và địa chỉ pháp nhân (nếu Microsoft yêu cầu).
 
@@ -82,7 +82,8 @@ Phương án đã chốt:
 Các bước sau phải do người có thẩm quyền làm trực tiếp, không làm thay được:
 - Đăng nhập, đăng ký Partner Center (cần tài khoản Global Admin và hồ sơ pháp lý thật).
 - Xin ủy quyền VNPT-Media, ký hợp đồng với nhà phân phối.
-- Thông tin còn thiếu để hoàn thiện văn bản: số văn bản, người ký công văn, tên nhà phân phối được chọn, tên miền dùng cho tenant, danh sách nhân sự Global Admin / đầu mối.
+- Đã chốt: chưa có Partner ID (đăng ký mới); tên miền `vnptmedia.vn`; người ký công văn: anh Hưng.
+- Đang dùng giả định, cần chốt trước khi phát hành: họ tên đầy đủ và chức danh anh Hưng; đầu mối liên hệ, Global Admin, security contact; danh sách nhà phân phối nhận công văn; hạn phản hồi 20/11/2026; số văn bản.
 
 ## Bộ hồ sơ trong thư mục
 

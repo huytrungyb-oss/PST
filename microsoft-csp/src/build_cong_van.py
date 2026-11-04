@@ -31,7 +31,7 @@ bl('Hạn mức công nợ, điều kiện bảo lãnh, thời hạn thanh toán
 bl('Quy trình đặt hàng, cổng đặt hàng và khả năng kết nối API với hệ thống bán hàng của VNPT;')
 bl('Chính sách hỗ trợ kỹ thuật, đào tạo, chứng chỉ, tài liệu bán hàng và các chương trình ưu đãi của Microsoft dành cho đại lý.')
 h1('3. Bố trí buổi làm việc')
-pa('Đề nghị Quý Công ty bố trí buổi làm việc với VNPT VAS để trao đổi chi tiết. Thông tin phản hồi đề nghị gửi trước ngày ..../..../2026 ' + GD + '.')
+pa('Đề nghị Quý Công ty bố trí buổi làm việc với VNPT VAS để trao đổi chi tiết. Thông tin phản hồi đề nghị gửi trước ngày 20/11/2026 ' + GD + '.')
 pa('Đầu mối liên hệ: Ông/Bà ......................, Phòng Khai thác nội dung, điện thoại: ...................., email: .................... ' + GD + '.')
 pa('Trân trọng cảm ơn sự hợp tác của Quý Công ty./.')
 A(sig_tbl)
@@ -96,8 +96,8 @@ T[1]._tbl.getparent().remove(T[1]._tbl)
 sig = T[2]
 right = sig.rows[0].cells[1].paragraphs
 set_text(right[0], 'GIÁM ĐỐC', bold=True)
-set_text(right[1], GD, bold=False)
-set_text(right[-1], '[Họ và tên người ký — GIẢ ĐỊNH: cần xác nhận]', bold=True)
+set_text(right[1], '[GIẢ ĐỊNH — cần họ tên đầy đủ, chức danh người ký]', bold=False)
+set_text(right[-1], '.................... Hưng', bold=True)
 
 d.core_properties.title = 'Công văn đề nghị hợp tác phân phối bản quyền Microsoft'
 d.save(OUT)
