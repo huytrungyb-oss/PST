@@ -10,8 +10,8 @@
 2. **Nguyên tắc phân vai (đã chốt):** **mỗi nhà mạng dùng hệ thống trừ cước riêng**. MVNO tự bán, tự trừ cước, tự gia hạn/retry trên OCS/BSS của mình. **MBG không trừ cước, không cộng data**, chỉ đóng vai **nhà cung cấp nội dung (content provider) bán buôn**, cấp quyền lợi theo **2 hình thức: theo lượt (per-use) và theo chu kỳ (subscription)**.
 3. **MBG (Media Bundle Gateway) đã có sẵn phần lõi cần thiết**: danh mục gói, quản lý vòng đời quyền lợi theo chu kỳ, cấp license/kích hoạt tài khoản tại CP, thu hồi quyền khi huỷ, log phục vụ đối soát. Phần phải nâng cấp: **đa thuê (multi-tenant)**, **API mở để MVNO gọi cấp/gia hạn/thu hồi quyền sau khi họ trừ cước xong**, **mô hình theo lượt**, và **đối soát chéo CDR của MVNO với log cấp quyền của MBG**. Các phần trừ cước Diameter, cộng data, retry gia hạn của MBG **không dùng** cho MVNO.
 4. **Đề xuất:** nâng cấp MBG thành **"VNPT Content Hub for MVNO"** – MVNE ở lớp nội dung. Vì MBG không phụ thuộc OCS của nhà mạng nào, **cùng một chuẩn API phục vụ được mọi MVNO, bất kể chạy trên hạ tầng VinaPhone hay MobiFone**.
-5. **Lộ trình:** (0) chốt cơ chế và MVNO pilot; (1) API cấp quyền theo chu kỳ cho 1 MVNO; (2) bổ sung theo lượt + cổng MVNO + đối soát tự động; (3) nhân rộng nhiều MVNO và CP.
-6. **Điều kiện tiên quyết còn lại:** cơ chế kinh tế nội bộ VNPT cho doanh thu ngoài VinaPhone và **hợp đồng ba bên** MVNO – VNPT-Media – CP (đặc biệt điều khoản đối soát vì số liệu tính tiền nằm ở MVNO). Quyền phân phối của CP đã được xác nhận.
+5. **Lộ trình:** (0) chốt hợp đồng mẫu và MVNO pilot; (1) API cấp quyền theo chu kỳ cho 1 MVNO; (2) bổ sung theo lượt + cổng MVNO + đối soát tự động; (3) nhân rộng nhiều MVNO và CP.
+6. **Điều kiện tiên quyết còn lại:** chỉ còn **hợp đồng ba bên** MVNO – VNPT-Media – CP (đặc biệt điều khoản đối soát vì số liệu tính tiền nằm ở MVNO). Quyền phân phối của CP đã được xác nhận; **không cần cơ chế nội bộ Tập đoàn – VNPT-Media tự triển khai**.
 
 ### Các quyết định đã chốt (04/11/2026)
 
@@ -23,6 +23,10 @@
 | 4 | Định danh thuê bao | **Số điện thoại được mã hoá**; MBG và CP không nhận số điện thoại dạng rõ | Mục 5.3, 5.5 |
 | 5 | Quyền phân phối của CP qua MVNO | **Có** – hợp đồng CP hiện tại cho phép | Mục 8 |
 | 6 | Nguồn lực kỹ thuật MBG | **Đủ nguồn lực** – triển khai song song, rút ngắn lộ trình | Mục 7 |
+| 7 | Tỷ lệ chia sẻ doanh thu (phần B) | **70%** doanh thu gói theo CDR của MVNO thuộc về VNPT-Media | Mục 6.1, 6.2 |
+| 8 | Ngưỡng lệch đối soát | **1%** chênh lệch số lượng giữa log MBG và CDR MVNO thì đối soát chi tiết theo `txn_id` | Mục 6.1 |
+| 9 | CP kích hoạt bằng số điện thoại | **Giả định**: toàn bộ CP kích hoạt bằng license/mã, không cần số điện thoại; CP nào ngoại lệ dùng phương án chuyển tiếp số mã hoá | Mục 5.3 |
+| 10 | Cơ chế nội bộ | **Không cần cơ chế** với Tập đoàn/VinaPhone; **VNPT-Media tự triển khai** | Mục 7, 8 |
 
 
 ---
@@ -217,25 +221,25 @@ Phải trả VNPT-Media = MAX( A ; B )
 
 - **A bảo vệ VNPT-Media**: luôn có doanh thu tối thiểu theo số liệu MBG tự nắm, kể cả khi MVNO bán giảm giá, khuyến mại hoặc số liệu doanh thu báo thiếu.
 - **B chia phần tăng trưởng**: khi MVNO bán giá cao, VNPT-Media hưởng theo tỷ lệ.
-- Đối soát: MBG tính A từ log; MVNO gửi CDR/doanh thu để tính B; chênh lệch số lượng giữa log MBG và CDR MVNO vượt ngưỡng (ví dụ 1%) thì đối soát chi tiết theo `txn_id`. Hợp đồng có điều khoản quyền kiểm toán CDR.
+- Đối soát: MBG tính A từ log; MVNO gửi CDR/doanh thu để tính B; chênh lệch số lượng giữa log MBG và CDR MVNO vượt ngưỡng **1%** (đã chốt) thì đối soát chi tiết theo `txn_id`. Hợp đồng có điều khoản quyền kiểm toán CDR.
 - Giá sàn và tỷ lệ chia sẻ quy định riêng theo gói, theo hình thức (chu kỳ/lượt) và có thể theo MVNO.
 
 ### 6.2. Dòng tiền (minh hoạ, số giả định)
 
-Giả định: gói nội dung tháng, **giá sàn 15.000đ/chu kỳ**, **tỷ lệ chia sẻ 60%**; trong tháng MBG ghi nhận 10.000 chu kỳ cấp quyền thành công.
+Giả định: gói nội dung tháng, **giá sàn 15.000đ/chu kỳ (giả định)**, **tỷ lệ chia sẻ 70% (đã chốt)**; trong tháng MBG ghi nhận 10.000 chu kỳ cấp quyền thành công.
 
-| Tình huống | Giá bán lẻ MVNO | Doanh thu MVNO (CDR) | A = giá sàn | B = 60% doanh thu | VNPT-Media nhận |
+| Tình huống | Giá bán lẻ MVNO | Doanh thu MVNO (CDR) | A = giá sàn | B = 70% doanh thu | VNPT-Media nhận |
 |---|---|---|---|---|---|
-| MVNO bán giá chuẩn | 30.000đ | 300 triệu | 150 triệu | 180 triệu | **180 triệu** (B) |
-| MVNO khuyến mại | 20.000đ | 200 triệu | 150 triệu | 120 triệu | **150 triệu** (A) |
-| CDR MVNO báo thiếu 3.000 chu kỳ | 30.000đ | 210 triệu | 150 triệu | 126 triệu | **150 triệu** (A) + đối soát chi tiết vì lệch > 1% |
+| MVNO bán giá chuẩn | 30.000đ | 300 triệu | 150 triệu | 210 triệu | **210 triệu** (B) |
+| MVNO khuyến mại | 20.000đ | 200 triệu | 150 triệu | 140 triệu | **150 triệu** (A) |
+| CDR MVNO báo thiếu 3.000 chu kỳ | 30.000đ | 210 triệu | 150 triệu | 147 triệu | **150 triệu** (A) + đối soát chi tiết vì lệch 30% > 1% |
 
 ```
 VNPT-Media nhận MAX(A;B) ──► CP: theo hợp đồng CP hiện hành
                          └─► VNPT-Media: phần còn lại (vận hành hub, CSKH tuyến 2)
 ```
 
-Tỷ lệ trên **chỉ để minh hoạ**; cần đối chiếu cơ chế kinh tế nội bộ (QĐ 55 và các phụ lục phân chia doanh thu theo công đoạn) và tham chiếu tỷ lệ đang áp dụng với VinaPhone.
+Tỷ lệ 70% đã chốt; **giá sàn 15.000đ là giả định**, cần chốt cụ thể theo từng gói. Phần VNPT-Media nhận được phân chia tiếp cho CP theo hợp đồng CP hiện hành.
 
 ### 6.3. Gợi ý danh mục nội dung theo MVNO
 
@@ -251,11 +255,11 @@ Tỷ lệ trên **chỉ để minh hoạ**; cần đối chiếu cơ chế kinh 
 
 ## 7. Lộ trình triển khai
 
-Với **đủ nguồn lực kỹ thuật MBG** và quyền phân phối CP đã có, lộ trình chạy song song: giai đoạn 0 và 1 chồng lấn (vừa đàm phán vừa phát triển), theo lượt làm song song với theo chu kỳ.
+Với **đủ nguồn lực kỹ thuật MBG**, quyền phân phối CP đã có và **VNPT-Media tự triển khai (không cần cơ chế nội bộ)**, lộ trình chạy song song: giai đoạn 0 và 1 chồng lấn (vừa đàm phán vừa phát triển), theo lượt làm song song với theo chu kỳ.
 
 | Giai đoạn | Thời gian (ước tính) | Nội dung | Đầu ra |
 |---|---|---|---|
-| **0. Cơ chế & pilot** | Tháng 1 | Thống nhất cơ chế kinh tế nội bộ; chọn MVNO pilot; chốt mẫu hợp đồng ba bên, công thức MAX(A;B), quy trình đối soát; chốt chuẩn `sub_token` | Tờ trình chủ trương, term sheet, đặc tả API v1 |
+| **0. Hợp đồng & pilot** | Tháng 1 | Chọn MVNO pilot; chốt mẫu hợp đồng ba bên, công thức MAX(A;B), quy trình đối soát; chốt chuẩn `sub_token`; chốt giá sàn từng gói | Kế hoạch triển khai VNPT-Media phê duyệt, term sheet, đặc tả API v1 |
 | **1. Theo chu kỳ** | Tháng 1–3 | Hạng mục 1, 2, 3, 5, 9: multi-tenant, API `activate/renew/deactivate/query`, idempotency, tự thu hồi sau `expire_at` + 7 ngày, `sub_token`; 2–3 CP sẵn sàng (iCallme, vnStudy…) | 1 MVNO chạy thật gói chu kỳ, đối soát tháng đầu |
 | **2. Theo lượt + vận hành** | Tháng 2–4 (song song) | Hạng mục 4, 6, 7: `grant_once`, webhook, đối soát chéo tự động tính MAX(A;B) | Gói theo lượt chạy thật; đối soát tự động |
 | **3. Nhân rộng** | Tháng 4–6 | Hạng mục 8, 10: MVNO Portal, sandbox tự phục vụ; mở rộng CP | ≥3 MVNO; tích hợp MVNO mới trong vài tuần |
@@ -271,16 +275,12 @@ Với **đủ nguồn lực kỹ thuật MBG** và quyền phân phối CP đã 
 | **Số liệu tính tiền nằm ở MVNO** | VNPT-Media không tự thấy được doanh thu thực tế, phụ thuộc số liệu MVNO báo | Công thức MAX(A;B): giá sàn A tính theo log MBG luôn đảm bảo mức tối thiểu; quyền kiểm toán CDR cho phần B |
 | **Lệch trạng thái** | MVNO huỷ/không gia hạn nhưng không gọi API → thuê bao vẫn dùng nội dung miễn phí | Mọi quyền lợi có `expire_at`; MBG tự thu hồi sau 7 ngày ân hạn; đối soát ngày. Rủi ro tồn dư: tối đa 7 ngày dùng miễn phí/thuê bao – chấp nhận được, đổi lại không cắt nhầm khi MVNO đang retry |
 | **Cấp quyền lỗi sau khi đã trừ cước** | Thuê bao bị trừ tiền nhưng không có nội dung → khiếu nại | Mã lỗi chuẩn, cam kết thời gian phản hồi, MVNO hoàn cước theo quy định của MVNO |
-| **Cơ chế nội bộ VNPT** | VinaPhone có thể lo ngại hỗ trợ đối thủ bán lẻ | Định vị là doanh thu bán buôn nội dung bổ sung cho Tập đoàn; không đụng tới hạ tầng, cước của VinaPhone |
 | **Dữ liệu cá nhân** | Định danh thuê bao giữa 3 bên | Đã chốt mã hoá số điện thoại (`sub_token`); MBG không lưu số rõ; thoả thuận xử lý dữ liệu |
-| **CP cần số điện thoại để đăng nhập** | Một số CP kích hoạt bằng số điện thoại/OTP | Chuyển sang kích hoạt bằng license; hoặc trường số mã hoá bằng khoá công khai của CP, MBG chỉ chuyển tiếp |
+| **CP cần số điện thoại để đăng nhập** | Một số CP kích hoạt bằng số điện thoại/OTP | Giả định toàn bộ CP kích hoạt bằng license; nếu phát hiện ngoại lệ khi tích hợp thì dùng trường số mã hoá bằng khoá công khai của CP, MBG chỉ chuyển tiếp |
 | **Quy mô nhỏ** | Tổng thuê bao MVNO chỉ vài triệu | API chuẩn một lần, tích hợp MVNO mới với chi phí thấp |
 
-**Câu hỏi còn mở (cần chốt ở giai đoạn 0):**
-1. Mức giá sàn và tỷ lệ chia sẻ cụ thể cho từng gói/hình thức (theo lượt, theo chu kỳ).
-2. Ngưỡng chênh lệch đối soát kích hoạt đối soát chi tiết (đề xuất 1%).
-3. Danh sách CP đang đăng nhập bằng số điện thoại/OTP cần điều chỉnh cách kích hoạt.
-4. Cơ chế kinh tế nội bộ VNPT áp dụng cho doanh thu bán buôn qua MVNO.
+**Còn mở (chốt trong giai đoạn 0):**
+1. Mức giá sàn cụ thể cho từng gói và từng hình thức (theo chu kỳ, theo lượt) – hiện dùng giả định 15.000đ/chu kỳ để minh hoạ.
 
 ---
 
@@ -288,9 +288,9 @@ Với **đủ nguồn lực kỹ thuật MBG** và quyền phân phối CP đã 
 
 1. Lập kế hoạch chi tiết và phân công đội kỹ thuật MBG cho các hạng mục bắt buộc ở mục 5.5 (chạy song song theo chu kỳ và theo lượt).
 2. Soạn đặc tả API v1 (`activate / renew / deactivate / grant_once / query`), chuẩn `sub_token` và mẫu file đối soát tính MAX(A;B).
-3. Rà các CP đang kích hoạt bằng số điện thoại để chuyển sang license.
-4. Tiếp cận 1 MVNO làm pilot (Pottel/iTel/Wintel hoặc VNSKY – mô hình không phụ thuộc hạ tầng).
-5. Soạn tờ trình chủ trương và term sheet mẫu (đã có đủ 5 quyết định để đưa vào).
+3. Khi tích hợp từng CP, kiểm tra lại giả định kích hoạt bằng license; ghi nhận ngoại lệ (nếu có).
+4. Chốt giá sàn từng gói và tiếp cận 1 MVNO làm pilot (Pottel/iTel/Wintel hoặc VNSKY – mô hình không phụ thuộc hạ tầng).
+5. Soạn kế hoạch triển khai của VNPT-Media và term sheet mẫu (đã có đủ 10 quyết định để đưa vào).
 
 ---
 
