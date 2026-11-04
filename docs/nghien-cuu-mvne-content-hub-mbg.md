@@ -1,6 +1,6 @@
 # Nghiên cứu: Mô hình MVNE – Content Hub cung cấp nội dung cho các MVNO trên nền nâng cấp hệ thống MBG
 
-*Ngày lập: 04/11/2026 · Phạm vi: VNPT VAS (VNPT-Media) · Trạng thái: bản nghiên cứu sơ bộ, cần xác minh các điểm đánh dấu (?)*
+*Ngày lập: 04/11/2026 · Phạm vi: VNPT VAS (VNPT-Media) · Trạng thái: bản nghiên cứu đã cập nhật các quyết định chốt; các điểm đánh dấu (?) cần xác minh*
 
 ---
 
@@ -11,7 +11,19 @@
 3. **MBG (Media Bundle Gateway) đã có sẵn phần lõi cần thiết**: danh mục gói, quản lý vòng đời quyền lợi theo chu kỳ, cấp license/kích hoạt tài khoản tại CP, thu hồi quyền khi huỷ, log phục vụ đối soát. Phần phải nâng cấp: **đa thuê (multi-tenant)**, **API mở để MVNO gọi cấp/gia hạn/thu hồi quyền sau khi họ trừ cước xong**, **mô hình theo lượt**, và **đối soát chéo CDR của MVNO với log cấp quyền của MBG**. Các phần trừ cước Diameter, cộng data, retry gia hạn của MBG **không dùng** cho MVNO.
 4. **Đề xuất:** nâng cấp MBG thành **"VNPT Content Hub for MVNO"** – MVNE ở lớp nội dung. Vì MBG không phụ thuộc OCS của nhà mạng nào, **cùng một chuẩn API phục vụ được mọi MVNO, bất kể chạy trên hạ tầng VinaPhone hay MobiFone**.
 5. **Lộ trình:** (0) chốt cơ chế và MVNO pilot; (1) API cấp quyền theo chu kỳ cho 1 MVNO; (2) bổ sung theo lượt + cổng MVNO + đối soát tự động; (3) nhân rộng nhiều MVNO và CP.
-6. **Điều kiện tiên quyết:** quyền phân phối của CP cho bên thứ ba, cơ chế kinh tế nội bộ VNPT cho doanh thu ngoài VinaPhone, và **hợp đồng ba bên** MVNO – VNPT-Media – CP (đặc biệt điều khoản đối soát vì số liệu tính tiền nằm ở MVNO).
+6. **Điều kiện tiên quyết còn lại:** cơ chế kinh tế nội bộ VNPT cho doanh thu ngoài VinaPhone và **hợp đồng ba bên** MVNO – VNPT-Media – CP (đặc biệt điều khoản đối soát vì số liệu tính tiền nằm ở MVNO). Quyền phân phối của CP đã được xác nhận.
+
+### Các quyết định đã chốt (04/11/2026)
+
+| # | Nội dung | Quyết định | Áp dụng tại |
+|---|---|---|---|
+| 1 | Phân vai trừ cước | Mỗi nhà mạng dùng hệ thống trừ cước riêng; MBG chỉ cấp nội dung theo lượt hoặc theo chu kỳ | Mục 5 |
+| 2 | Mô hình giá bán buôn | **Kết hợp**: giá sàn theo log cấp quyền của MBG **và** chia sẻ doanh thu trên doanh thu MVNO; VNPT-Media nhận mức cao hơn | Mục 6.1, 6.2 |
+| 3 | Thời gian ân hạn sau `expire_at` | **7 ngày**, sau đó MBG tự thu hồi quyền | Mục 5.2, 5.3 |
+| 4 | Định danh thuê bao | **Số điện thoại được mã hoá**; MBG và CP không nhận số điện thoại dạng rõ | Mục 5.3, 5.5 |
+| 5 | Quyền phân phối của CP qua MVNO | **Có** – hợp đồng CP hiện tại cho phép | Mục 8 |
+| 6 | Nguồn lực kỹ thuật MBG | **Đủ nguồn lực** – triển khai song song, rút ngắn lộ trình | Mục 7 |
+
 
 ---
 
@@ -94,7 +106,7 @@ Từ các tài liệu kịch bản kinh doanh (Bundle Add-on iCallme) và biên 
 | Ví dụ | Gói iCallme Premium tháng, vnStudy gói ngày/tháng/năm | Mua 1 bài học, 1 lượt tra cứu, 1 video, 1 lượt dùng tính năng AI |
 | Đơn vị tính | Thuê bao × chu kỳ hiệu lực | Giao dịch (lượt) |
 | Luồng chính | MVNO trừ cước → gọi `activate` (kèm `expire_at`) → MBG cấp quyền tại CP. Mỗi kỳ: MVNO trừ cước thành công → gọi `renew`; thất bại hết retry hoặc khách huỷ → gọi `deactivate` | MVNO trừ cước → gọi `grant_once` → MBG trả mã/link/kết quả dùng 1 lần |
-| Hết hạn | MBG **tự thu hồi quyền khi quá `expire_at`** nếu không nhận được `renew` (chống "quên huỷ" làm thất thoát nội dung) | Mã/link có hạn dùng ngắn |
+| Hết hạn | MBG **tự thu hồi quyền sau `expire_at` + 7 ngày ân hạn** nếu không nhận được `renew` (chống "quên huỷ" làm thất thoát nội dung; 7 ngày đủ cho MVNO hoàn tất retry gia hạn) | Mã/link có hạn dùng ngắn |
 | Đối soát | Số thuê bao-ngày có quyền lợi hợp lệ, so với số lượt trừ cước tháng/ngày của MVNO | Đối chiếu từng `transaction_id` |
 | Rủi ro chính | Lệch trạng thái giữa MVNO và MBG (MVNO đã huỷ nhưng không báo) | Trùng giao dịch, trừ cước nhưng không cấp được quyền |
 
@@ -107,7 +119,7 @@ Thuê bao        MVNO (kênh + OCS riêng)                 MBG (Content Hub)    
    │  DK GOI ──►│                                          │                              │
    │            │ 1. Kiểm tra điều kiện, trừ cước (OCS MVNO)│                              │
    │            │ 2. POST /subscriptions/activate ────────►│ 3. Xác thực tenant, gói      │
-   │            │    {tenant, msisdn, package, txn_id,     │ 4. Tạo/kích hoạt quyền ─────►│
+   │            │    {tenant, sub_token, package, txn_id,   │ 4. Tạo/kích hoạt quyền ─────►│
    │            │     charged_at, expire_at}               │◄──── license / tài khoản ────│
    │            │◄──────── {status, license, content_msg} ─│ 5. Ghi log cấp quyền         │
    │◄── MT (brandname MVNO, kèm license/link) ─            │                              │
@@ -115,18 +127,26 @@ Thuê bao        MVNO (kênh + OCS riêng)                 MBG (Content Hub)    
    │    ...hết chu kỳ: MVNO tự gia hạn, retry trên OCS MVNO...                            │
    │            │ Thành công → POST /subscriptions/renew ─►│ gia hạn quyền tới expire_at mới
    │            │ Huỷ/hết retry → POST /deactivate ───────►│ thu hồi quyền tại CP ───────►│
-   │            │                    (không nhận renew sau expire_at + grace) → MBG tự thu hồi
+   │            │                    (không nhận renew sau expire_at + 7 ngày) → MBG tự thu hồi
 ```
 
 **Theo lượt:**
 
 ```
-MVNO: trừ cước lượt (OCS MVNO) → POST /usage/grant {tenant, msisdn, item, txn_id}
+MVNO: trừ cước lượt (OCS MVNO) → POST /usage/grant {tenant, sub_token, item, txn_id}
 MBG : kiểm tra trùng txn_id (idempotent) → gọi CP lấy mã/link/kết quả → trả về cho MVNO
 Lỗi : MBG trả mã lỗi chuẩn → MVNO hoàn cước theo quy định của MVNO; giao dịch lỗi được loại khỏi đối soát
 ```
 
-**Yêu cầu bắt buộc của API:** idempotent theo `txn_id` (MVNO gọi lại không cấp trùng), thời gian phản hồi ngắn để MVNO quyết định hoàn cước, webhook ngược về MVNO khi CP thu hồi/lỗi quyền lợi, và API `GET /subscriptions/{msisdn}` để tra cứu phục vụ CSKH.
+**Yêu cầu bắt buộc của API:** idempotent theo `txn_id` (MVNO gọi lại không cấp trùng), thời gian phản hồi ngắn để MVNO quyết định hoàn cước, webhook ngược về MVNO khi CP thu hồi/lỗi quyền lợi, và API `GET /subscriptions/{sub_token}` để tra cứu phục vụ CSKH.
+
+**Mã hoá số điện thoại (`sub_token`):**
+- MVNO không gửi số điện thoại dạng rõ. MVNO tính `sub_token = HMAC-SHA256(khoá_bí_mật_của_tenant, số_điện_thoại_chuẩn_hoá_84xxx)` và gửi kèm mọi lệnh.
+- Mã này **cố định cho cùng một thuê bao** (để tra cứu, gia hạn, đối soát khớp được) và **khác nhau giữa các MVNO** (không thể ghép dữ liệu chéo tenant). Khoá bí mật do MVNO giữ, đổi khoá theo quy trình thống nhất.
+- CSKH: tổng đài MVNO tự tính `sub_token` từ số khách cung cấp rồi tra cứu qua API; MBG không cần biết số điện thoại.
+- Tin nhắn tới thuê bao do MVNO gửi, nên MBG không cần số điện thoại để gửi MT.
+- CP chỉ nhận `sub_token` (hoặc mã license). **Lưu ý:** CP nào đăng nhập bằng số điện thoại/OTP phải chuyển sang kích hoạt bằng mã license hoặc liên kết tài khoản; nếu buộc phải có số điện thoại, MVNO gửi thêm trường số được mã hoá bằng khoá công khai của CP đó, MBG chỉ chuyển tiếp, không giải mã.
+- Dữ liệu đã mã hoá vẫn được coi là dữ liệu cá nhân (dữ liệu bút danh hoá), vẫn cần thoả thuận xử lý dữ liệu giữa các bên.
 
 ### 5.4. Kiến trúc mục tiêu
 
@@ -163,13 +183,13 @@ Lỗi : MBG trả mã lỗi chuẩn → MVNO hoàn cước theo quy định củ
 |---|---|---|---|---|
 | 1 | **Mô hình dữ liệu đa thuê** | Một nhà mạng (VinaPhone) | `tenant_id` xuyên suốt: quyền lợi, giao dịch, log, cấu hình; tách dữ liệu và phân quyền theo tenant | **Bắt buộc** |
 | 2 | **API cấp quyền cho bên ngoài** | API nội bộ cho kênh bán VNPT, MBG tự trừ cước rồi cấp quyền | Tách luồng "trừ cước" khỏi luồng "cấp quyền": API `activate / renew / deactivate / grant_once / query`; OAuth2 hoặc mTLS, rate limit, sandbox, tài liệu API | **Bắt buộc** |
-| 3 | **Idempotency & trạng thái** | Trạng thái do MBG tự quản lý | Khoá theo `txn_id` của MVNO; quy tắc khi lệch trạng thái; tự thu hồi khi quá `expire_at` + thời gian ân hạn | **Bắt buộc** |
+| 3 | **Idempotency & trạng thái** | Trạng thái do MBG tự quản lý | Khoá theo `txn_id` của MVNO; quy tắc khi lệch trạng thái; tự thu hồi khi quá `expire_at` + 7 ngày | **Bắt buộc** |
 | 4 | **Mô hình theo lượt** | Chủ yếu gói chu kỳ | Entitlement dùng 1 lần: mã/link có hạn, kết quả trả ngay, xử lý lỗi để MVNO hoàn cước | **Bắt buộc** |
 | 5 | Danh mục theo tenant | Một bảng giá bán lẻ | Một nội dung → nhiều SKU bán buôn theo MVNO; giá bán buôn và chu kỳ cho phép; MVNO tự đặt giá bán lẻ | **Bắt buộc** |
 | 6 | Webhook về MVNO | Không có | Báo sự kiện CP thu hồi/lỗi quyền, nội dung ngừng cung cấp | Nên có |
 | 7 | **Đối soát chéo** | Đối soát dựa trên log trừ cước của chính MBG | Nhận file/API đối soát từ MVNO; so khớp với log cấp quyền; xử lý chênh lệch; tính chia sẻ cho CP | **Bắt buộc** |
 | 8 | MVNO Portal | Không có | Cổng tự phục vụ: danh mục, báo cáo realtime, tải đối soát, quản lý API key | Nên có |
-| 9 | Bảo mật & dữ liệu cá nhân | Trong phạm vi VNPT | Chỉ nhận dữ liệu tối thiểu (msisdn hoặc mã thuê bao ẩn danh), tách dữ liệu tenant, thoả thuận xử lý dữ liệu; tuân thủ Nghị định 13/2023 và Luật Bảo vệ dữ liệu cá nhân (?) | **Bắt buộc** |
+| 9 | Bảo mật & dữ liệu cá nhân | Trong phạm vi VNPT | Định danh thuê bao bằng **`sub_token` (HMAC số điện thoại theo khoá riêng từng MVNO)**, không lưu số điện thoại dạng rõ; hỗ trợ trường số mã hoá chuyển tiếp cho CP bắt buộc; tách dữ liệu tenant, thoả thuận xử lý dữ liệu; tuân thủ Nghị định 13/2023 và Luật Bảo vệ dữ liệu cá nhân (?) | **Bắt buộc** |
 | 10 | Hiệu năng & cô lập tải | Theo tải VinaPhone | Quota, circuit breaker theo tenant để sự cố một MVNO không ảnh hưởng VinaPhone | Bắt buộc |
 | – | Trừ cước Diameter, cộng data, retry gia hạn | Đang có cho VinaPhone | **Giữ nguyên cho VinaPhone, không mở cho MVNO** | Không làm |
 
@@ -187,17 +207,32 @@ Lỗi : MBG trả mã lỗi chuẩn → MVNO hoàn cước theo quy định củ
 | **Mua sỉ license theo lô** | Bán trước N license | Khuyến mại, hội viên, quà tặng | MVNO tồn kho license |
 | **Phí nền tảng + rev-share** | Phí tích hợp/tháng + % doanh thu | MVNO lớn cần tuỳ biến | Khó đàm phán với MVNO nhỏ |
 
-**Khuyến nghị:** vì cước nằm trên hệ thống của MVNO, nên ưu tiên **giá sỉ tính theo log cấp quyền của MBG** (theo chu kỳ hoặc theo lượt) – VNPT-Media tự nắm số liệu, đối soát đơn giản. Rev-share chỉ dùng khi MVNO yêu cầu, kèm doanh thu tối thiểu cam kết và quyền kiểm toán CDR.
+**Đã chốt: kết hợp giá sàn theo log MBG và chia sẻ doanh thu.** Mỗi kỳ đối soát (tháng), với từng MVNO và từng gói:
+
+```
+Phải trả VNPT-Media = MAX( A ; B )
+  A = Giá sàn × Số chu kỳ (hoặc số lượt) cấp quyền thành công theo log MBG
+  B = Tỷ lệ chia sẻ × Doanh thu gói đó theo CDR đối soát của MVNO
+```
+
+- **A bảo vệ VNPT-Media**: luôn có doanh thu tối thiểu theo số liệu MBG tự nắm, kể cả khi MVNO bán giảm giá, khuyến mại hoặc số liệu doanh thu báo thiếu.
+- **B chia phần tăng trưởng**: khi MVNO bán giá cao, VNPT-Media hưởng theo tỷ lệ.
+- Đối soát: MBG tính A từ log; MVNO gửi CDR/doanh thu để tính B; chênh lệch số lượng giữa log MBG và CDR MVNO vượt ngưỡng (ví dụ 1%) thì đối soát chi tiết theo `txn_id`. Hợp đồng có điều khoản quyền kiểm toán CDR.
+- Giá sàn và tỷ lệ chia sẻ quy định riêng theo gói, theo hình thức (chu kỳ/lượt) và có thể theo MVNO.
 
 ### 6.2. Dòng tiền (minh hoạ, số giả định)
 
-MVNO bán lẻ gói nội dung 30.000đ/tháng (MVNO tự định giá, tự trừ cước), mua sỉ từ VNPT-Media 18.000đ/thuê bao/chu kỳ:
+Giả định: gói nội dung tháng, **giá sàn 15.000đ/chu kỳ**, **tỷ lệ chia sẻ 60%**; trong tháng MBG ghi nhận 10.000 chu kỳ cấp quyền thành công.
+
+| Tình huống | Giá bán lẻ MVNO | Doanh thu MVNO (CDR) | A = giá sàn | B = 60% doanh thu | VNPT-Media nhận |
+|---|---|---|---|---|---|
+| MVNO bán giá chuẩn | 30.000đ | 300 triệu | 150 triệu | 180 triệu | **180 triệu** (B) |
+| MVNO khuyến mại | 20.000đ | 200 triệu | 150 triệu | 120 triệu | **150 triệu** (A) |
+| CDR MVNO báo thiếu 3.000 chu kỳ | 30.000đ | 210 triệu | 150 triệu | 126 triệu | **150 triệu** (A) + đối soát chi tiết vì lệch > 1% |
 
 ```
-Thuê bao trả 30.000đ ──► MVNO (OCS riêng) giữ 12.000đ (kênh, thu cước, gia hạn, CSKH tuyến 1)
-                     └─► VNPT-Media nhận 18.000đ × số chu kỳ cấp quyền thành công (theo log MBG)
-                              ├─► CP: theo hợp đồng CP hiện hành
-                              └─► VNPT-Media: phần còn lại (vận hành hub, CSKH tuyến 2)
+VNPT-Media nhận MAX(A;B) ──► CP: theo hợp đồng CP hiện hành
+                         └─► VNPT-Media: phần còn lại (vận hành hub, CSKH tuyến 2)
 ```
 
 Tỷ lệ trên **chỉ để minh hoạ**; cần đối chiếu cơ chế kinh tế nội bộ (QĐ 55 và các phụ lục phân chia doanh thu theo công đoạn) và tham chiếu tỷ lệ đang áp dụng với VinaPhone.
@@ -216,12 +251,14 @@ Tỷ lệ trên **chỉ để minh hoạ**; cần đối chiếu cơ chế kinh 
 
 ## 7. Lộ trình triển khai
 
-| Giai đoạn | Thời gian (?) | Nội dung | Đầu ra |
+Với **đủ nguồn lực kỹ thuật MBG** và quyền phân phối CP đã có, lộ trình chạy song song: giai đoạn 0 và 1 chồng lấn (vừa đàm phán vừa phát triển), theo lượt làm song song với theo chu kỳ.
+
+| Giai đoạn | Thời gian (ước tính) | Nội dung | Đầu ra |
 |---|---|---|---|
-| **0. Cơ chế & pilot** | 1–2 tháng | Rà quyền phân phối của CP cho bên thứ ba; thống nhất cơ chế kinh tế nội bộ; chọn MVNO pilot; chốt mẫu hợp đồng và **quy trình đối soát dựa trên CDR của MVNO** | Tờ trình chủ trương, term sheet, đặc tả API v1 |
-| **1. Theo chu kỳ** | 2–3 tháng | Hạng mục 1, 2, 3, 5, 9: multi-tenant, API `activate/renew/deactivate/query`, idempotency, tự thu hồi quá hạn; 2–3 CP sẵn sàng (iCallme, vnStudy…) | 1 MVNO chạy thật gói chu kỳ, đối soát tháng đầu |
-| **2. Theo lượt + vận hành** | 2–3 tháng | Hạng mục 4, 6, 7: `grant_once`, webhook, đối soát chéo tự động | Gói theo lượt chạy thật; đối soát tự động |
-| **3. Nhân rộng** | 3–6 tháng | Hạng mục 8, 10: MVNO Portal, sandbox tự phục vụ; mở rộng CP | ≥3 MVNO; tích hợp MVNO mới trong vài tuần |
+| **0. Cơ chế & pilot** | Tháng 1 | Thống nhất cơ chế kinh tế nội bộ; chọn MVNO pilot; chốt mẫu hợp đồng ba bên, công thức MAX(A;B), quy trình đối soát; chốt chuẩn `sub_token` | Tờ trình chủ trương, term sheet, đặc tả API v1 |
+| **1. Theo chu kỳ** | Tháng 1–3 | Hạng mục 1, 2, 3, 5, 9: multi-tenant, API `activate/renew/deactivate/query`, idempotency, tự thu hồi sau `expire_at` + 7 ngày, `sub_token`; 2–3 CP sẵn sàng (iCallme, vnStudy…) | 1 MVNO chạy thật gói chu kỳ, đối soát tháng đầu |
+| **2. Theo lượt + vận hành** | Tháng 2–4 (song song) | Hạng mục 4, 6, 7: `grant_once`, webhook, đối soát chéo tự động tính MAX(A;B) | Gói theo lượt chạy thật; đối soát tự động |
+| **3. Nhân rộng** | Tháng 4–6 | Hạng mục 8, 10: MVNO Portal, sandbox tự phục vụ; mở rộng CP | ≥3 MVNO; tích hợp MVNO mới trong vài tuần |
 
 **Chỉ số theo dõi:** số MVNO kết nối; số thuê bao có quyền lợi hợp lệ theo tenant; số lượt cấp theo lượt; tỷ lệ cấp quyền thành công; tỷ lệ lệch đối soát; doanh thu bán buôn theo tenant/CP; thời gian tích hợp một MVNO mới.
 
@@ -231,29 +268,29 @@ Tỷ lệ trên **chỉ để minh hoạ**; cần đối chiếu cơ chế kinh 
 
 | Rủi ro | Mô tả | Giảm thiểu |
 |---|---|---|
-| **Số liệu tính tiền nằm ở MVNO** | VNPT-Media không tự thấy được doanh thu thực tế, phụ thuộc số liệu MVNO báo | Tính phí bán buôn theo **log cấp quyền của MBG** (số thuê bao-ngày có quyền lợi, số lượt cấp) thay vì theo doanh thu MVNO báo; hoặc rev-share kèm quyền kiểm toán CDR |
-| **Lệch trạng thái** | MVNO huỷ/không gia hạn nhưng không gọi API → thuê bao vẫn dùng nội dung miễn phí | Mọi quyền lợi có `expire_at`; MBG tự thu hồi khi quá hạn; đối soát ngày |
+| **Số liệu tính tiền nằm ở MVNO** | VNPT-Media không tự thấy được doanh thu thực tế, phụ thuộc số liệu MVNO báo | Công thức MAX(A;B): giá sàn A tính theo log MBG luôn đảm bảo mức tối thiểu; quyền kiểm toán CDR cho phần B |
+| **Lệch trạng thái** | MVNO huỷ/không gia hạn nhưng không gọi API → thuê bao vẫn dùng nội dung miễn phí | Mọi quyền lợi có `expire_at`; MBG tự thu hồi sau 7 ngày ân hạn; đối soát ngày. Rủi ro tồn dư: tối đa 7 ngày dùng miễn phí/thuê bao – chấp nhận được, đổi lại không cắt nhầm khi MVNO đang retry |
 | **Cấp quyền lỗi sau khi đã trừ cước** | Thuê bao bị trừ tiền nhưng không có nội dung → khiếu nại | Mã lỗi chuẩn, cam kết thời gian phản hồi, MVNO hoàn cước theo quy định của MVNO |
-| **Quyền phân phối của CP** | Hợp đồng CP có thể chỉ cho phân phối qua VinaPhone | Phụ lục hợp đồng mở rộng kênh phân phối |
 | **Cơ chế nội bộ VNPT** | VinaPhone có thể lo ngại hỗ trợ đối thủ bán lẻ | Định vị là doanh thu bán buôn nội dung bổ sung cho Tập đoàn; không đụng tới hạ tầng, cước của VinaPhone |
-| **Dữ liệu cá nhân** | Chia sẻ msisdn giữa 3 bên | Tối thiểu hoá dữ liệu, mã thuê bao ẩn danh nếu CP không cần msisdn |
+| **Dữ liệu cá nhân** | Định danh thuê bao giữa 3 bên | Đã chốt mã hoá số điện thoại (`sub_token`); MBG không lưu số rõ; thoả thuận xử lý dữ liệu |
+| **CP cần số điện thoại để đăng nhập** | Một số CP kích hoạt bằng số điện thoại/OTP | Chuyển sang kích hoạt bằng license; hoặc trường số mã hoá bằng khoá công khai của CP, MBG chỉ chuyển tiếp |
 | **Quy mô nhỏ** | Tổng thuê bao MVNO chỉ vài triệu | API chuẩn một lần, tích hợp MVNO mới với chi phí thấp |
 
-**Câu hỏi cần chốt:**
-1. Mô hình giá bán buôn: theo log cấp quyền của MBG hay rev-share trên doanh thu MVNO?
-2. Thời gian ân hạn (grace period) sau `expire_at` trước khi MBG tự thu hồi quyền?
-3. Thông tin định danh thuê bao gửi sang MBG: msisdn hay mã ẩn danh?
-4. Hợp đồng CP hiện tại có cho phép phân phối qua MVNO không?
-5. Đánh giá của đội kỹ thuật MBG về effort tách luồng trừ cước khỏi luồng cấp quyền và thêm `tenant_id`.
+**Câu hỏi còn mở (cần chốt ở giai đoạn 0):**
+1. Mức giá sàn và tỷ lệ chia sẻ cụ thể cho từng gói/hình thức (theo lượt, theo chu kỳ).
+2. Ngưỡng chênh lệch đối soát kích hoạt đối soát chi tiết (đề xuất 1%).
+3. Danh sách CP đang đăng nhập bằng số điện thoại/OTP cần điều chỉnh cách kích hoạt.
+4. Cơ chế kinh tế nội bộ VNPT áp dụng cho doanh thu bán buôn qua MVNO.
 
 ---
 
 ## 9. Bước tiếp theo đề xuất
 
-1. Đội kỹ thuật MBG ước lượng effort cho các hạng mục bắt buộc ở mục 5.5.
-2. Soạn đặc tả API v1 (`activate / renew / deactivate / grant_once / query`) và mẫu file đối soát.
-3. Tiếp cận 1 MVNO làm pilot (Pottel/iTel/Wintel hoặc VNSKY – mô hình không phụ thuộc hạ tầng).
-4. Soạn tờ trình chủ trương và term sheet mẫu.
+1. Lập kế hoạch chi tiết và phân công đội kỹ thuật MBG cho các hạng mục bắt buộc ở mục 5.5 (chạy song song theo chu kỳ và theo lượt).
+2. Soạn đặc tả API v1 (`activate / renew / deactivate / grant_once / query`), chuẩn `sub_token` và mẫu file đối soát tính MAX(A;B).
+3. Rà các CP đang kích hoạt bằng số điện thoại để chuyển sang license.
+4. Tiếp cận 1 MVNO làm pilot (Pottel/iTel/Wintel hoặc VNSKY – mô hình không phụ thuộc hạ tầng).
+5. Soạn tờ trình chủ trương và term sheet mẫu (đã có đủ 5 quyết định để đưa vào).
 
 ---
 
